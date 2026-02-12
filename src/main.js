@@ -63,6 +63,67 @@ document.getElementById('load-preset')?.addEventListener('click', () => {
   }
 });
 
+// Export/Import modal
+const modal = document.getElementById('preset-modal');
+const modalTitle = document.getElementById('modal-title');
+const presetJson = document.getElementById('preset-json');
+const modalCopy = document.getElementById('modal-copy');
+const modalApply = document.getElementById('modal-apply');
+const modalClose = document.getElementById('modal-close');
+
+document.getElementById('export-preset')?.addEventListener('click', () => {
+  modalTitle.textContent = 'Export Preset';
+  presetJson.value = JSON.stringify(currentSettings, null, 2);
+  presetJson.readOnly = true;
+  modalCopy.classList.remove('hidden');
+  modalApply.classList.add('hidden');
+  modal.classList.remove('hidden');
+});
+
+document.getElementById('import-preset')?.addEventListener('click', () => {
+  modalTitle.textContent = 'Import Preset';
+  presetJson.value = '';
+  presetJson.readOnly = false;
+  presetJson.placeholder = 'Paste preset JSON here...';
+  modalCopy.classList.add('hidden');
+  modalApply.classList.remove('hidden');
+  modal.classList.remove('hidden');
+});
+
+modalCopy?.addEventListener('click', () => {
+  presetJson.select();
+  navigator.clipboard.writeText(presetJson.value);
+  modalCopy.textContent = 'COPIED!';
+  setTimeout(() => modalCopy.textContent = 'COPY', 1500);
+});
+
+modalApply?.addEventListener('click', () => {
+  try {
+    const imported = JSON.parse(presetJson.value);
+    currentSettings = mergePreset(PRESETS.default, imported);
+    applySettings(currentSettings);
+    updateUIFromSettings();
+    modal.classList.add('hidden');
+  } catch (e) {
+    alert('Invalid JSON: ' + e.message);
+  }
+});
+
+modalClose?.addEventListener('click', () => {
+  modal.classList.add('hidden');
+});
+
+modal?.addEventListener('click', (e) => {
+  if (e.target === modal) modal.classList.add('hidden');
+});
+
+// Transition style
+let transitionStyle = 'fade';
+document.getElementById('transition-style')?.addEventListener('change', (e) => {
+  transitionStyle = e.target.value;
+  if (visualizer) visualizer.transitionStyle = transitionStyle;
+});
+
 function applySettings(s) {
   if (!visualizer) return;
   visualizer.updateSettings(s);
@@ -105,6 +166,10 @@ function updateUIFromSettings() {
   setValue('scene-rotation', s.sceneRotation);
   setChecked('mirror-x', s.mirrorX);
   setChecked('mirror-y', s.mirrorY);
+  // Auto-cycle
+  setChecked('auto-cycle', s.autoCycle);
+  setValue('auto-cycle-beats', s.autoCycleBeats);
+  setValue('auto-cycle-mode', s.autoCycleMode);
 }
 
 function setValue(id, val) {
@@ -172,6 +237,11 @@ bindControl('scene-rotation', 'sceneRotation');
 bindControl('mirror-x', 'mirrorX', true);
 bindControl('mirror-y', 'mirrorY', true);
 
+// Auto-cycle
+bindControl('auto-cycle', 'autoCycle', true);
+bindControl('auto-cycle-beats', 'autoCycleBeats', false, true);  // parse as number
+bindControl('auto-cycle-mode', 'autoCycleMode', false, false);
+
 window.addEventListener('modechange', (e) => {
   if (modeDisplay) {
     modeDisplay.textContent = e.detail.name;
@@ -183,6 +253,8 @@ window.addEventListener('modechange', (e) => {
     }, 1500);
   }
 });
+
+// Auto-cycle: no display, handled silently with morph effect
 
 function showControls() {
   controls.classList.remove('hidden');
@@ -242,18 +314,22 @@ canvas?.addEventListener('dblclick', () => {
   document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 });
 
+const TOTAL_MODES = 12;
+
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   
   if (e.key >= '1' && e.key <= '9') { visualizer?.setMode(parseInt(e.key) - 1); return; }
   if (e.key === '0') { visualizer?.setMode(9); return; }
   
-  switch (e.key) {
+  switch (e.key.toLowerCase()) {
     case 'f': document.documentElement.requestFullscreen(); break;
-    case 'Escape': document.fullscreenElement && document.exitFullscreen(); break;
+    case 'escape': document.fullscreenElement && document.exitFullscreen(); break;
     case 'h': controlsVisible ? (controls.classList.add('hidden'), zoomHint?.classList.add('hidden'), controlsVisible = false) : showControls(); break;
-    case 'ArrowRight': visualizer?.setMode((visualizer.currentModeIndex + 1) % 10); break;
-    case 'ArrowLeft': visualizer?.setMode((visualizer.currentModeIndex + 9) % 10); break;
+    case 'arrowright': visualizer?.setMode((visualizer.currentModeIndex + 1) % TOTAL_MODES); break;
+    case 'arrowleft': visualizer?.setMode((visualizer.currentModeIndex + TOTAL_MODES - 1) % TOTAL_MODES); break;
+    case 'k': visualizer?.setMode(10); break; // Kaleidoscope
+    case 'l': visualizer?.setMode(11); break; // Fluid
   }
 });
 

@@ -9,8 +9,9 @@
   <body>
     <div id="app">
       <canvas id="visualizer"></canvas>
+      <div id="morph-overlay"></div>
       <div id="mode-display" class="hidden">WAVEFORM</div>
-      <div id="zoom-hint">SCROLL ZOOM / 1-0 MODES / DRAG TEXT / H HIDE</div>
+      <div id="zoom-hint">SCROLL ZOOM / 1-0,K,L MODES / DRAG TEXT / H HIDE / ← → CYCLE / F FULLSCREEN</div>
       <div id="controls">
         <div id="source-buttons">
           <button id="system-audio" class="source-btn primary">SYSTEM AUDIO</button>
@@ -115,6 +116,21 @@
               <label>MIRROR X <input type="checkbox" id="mirror-x" /></label>
               <label>MIRROR Y <input type="checkbox" id="mirror-y" /></label>
             </div>
+            <div class="settings-row">
+              <label>AUTO-CYCLE <input type="checkbox" id="auto-cycle" checked /></label>
+              <label>BEATS <select id="auto-cycle-beats">
+                <option value="4">4</option>
+                <option value="8">8</option>
+                <option value="16" selected>16</option>
+                <option value="32">32</option>
+                <option value="64">64</option>
+              </select></label>
+              <label>MODE <select id="auto-cycle-mode">
+                <option value="smart">Smart</option>
+                <option value="random">Random</option>
+                <option value="sequential">Sequential</option>
+              </select></label>
+            </div>
           </div>
           
           <!-- PRESETS TAB -->
@@ -137,12 +153,38 @@
               <button id="save-preset" class="action-btn">SAVE CUSTOM</button>
               <button id="load-preset" class="action-btn">LOAD CUSTOM</button>
             </div>
+            <div class="settings-row">
+              <button id="export-preset" class="action-btn">EXPORT JSON</button>
+              <button id="import-preset" class="action-btn">IMPORT JSON</button>
+            </div>
+            <div class="settings-row">
+              <label>TRANSITION <select id="transition-style">
+                <option value="fade">Fade</option>
+                <option value="cut">Cut</option>
+                <option value="wipe">Wipe</option>
+                <option value="zoom">Zoom</option>
+                <option value="glitch">Glitch</option>
+              </select></label>
+            </div>
           </div>
           
           <div class="mode-keys">
             <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
             <span>6</span><span>7</span><span>8</span><span>9</span><span>0</span>
+            <span>K</span><span>L</span>
           </div>
+        </div>
+      </div>
+    </div>
+    <!-- Import/Export Modal -->
+    <div id="preset-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="modal-title">Export Preset</h3>
+        <textarea id="preset-json" rows="10" placeholder="Paste preset JSON here..."></textarea>
+        <div class="modal-buttons">
+          <button id="modal-copy" class="action-btn">COPY</button>
+          <button id="modal-apply" class="action-btn hidden">APPLY</button>
+          <button id="modal-close" class="action-btn">CLOSE</button>
         </div>
       </div>
     </div>

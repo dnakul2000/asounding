@@ -32,6 +32,32 @@ export class GridMode {
     this.scene.add(this.sun);
     this.objects.push(this.sun);
     
+    // Sun glow rings
+    this.sunGlows = [];
+    for (let i = 0; i < 4; i++) {
+      const glow = new THREE.Mesh(
+        new THREE.RingGeometry(2.2 + i * 0.4, 2.4 + i * 0.4, 32),
+        new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3 - i * 0.06, side: THREE.DoubleSide })
+      );
+      glow.position.set(0, 3, -14.1 - i * 0.01);
+      this.scene.add(glow);
+      this.sunGlows.push(glow);
+      this.objects.push(glow);
+    }
+    
+    // Horizontal scan lines (retro effect)
+    this.scanLines = [];
+    for (let i = 0; i < 5; i++) {
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-25, -14 + i * 0.3, -14.05),
+        new THREE.Vector3(25, -14 + i * 0.3, -14.05)
+      ]);
+      const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0.2 }));
+      this.scene.add(line);
+      this.scanLines.push(line);
+      this.objects.push(line);
+    }
+    
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(300 * 3);
     for (let i = 0; i < 300; i++) { starPositions[i * 3] = (Math.random() - 0.5) * 40; starPositions[i * 3 + 1] = Math.random() * 10 + 2; starPositions[i * 3 + 2] = -10 - Math.random() * 5; }
@@ -63,9 +89,29 @@ export class GridMode {
     
     const hue = (this.time * 0.02) % 1;
     this.terrain.material.color.setHSL(hue, 1, 0.5);
-    const sunScale = 1 + bass * 0.5;
+    const sunScale = 1 + bass * 0.8;
     this.sun.scale.set(sunScale, sunScale, 1);
-    this.sun.material.color.setHSL((hue + 0.1) % 1, 1, 0.5);
+    this.sun.material.color.setHSL((hue + 0.1) % 1, 1, 0.5 + bass * 0.3);
+    this.sun.material.opacity = 0.7 + bass * 0.3;
+    
+    // Animate sun glow rings
+    this.sunGlows.forEach((glow, i) => {
+      const glowScale = sunScale + bass * (i + 1) * 0.3;
+      glow.scale.set(glowScale, glowScale, 1);
+      glow.material.opacity = (0.3 - i * 0.06) + bass * 0.2;
+      glow.material.color.setHSL((hue + 0.1 + i * 0.02) % 1, 1, 0.5);
+    });
+    
+    // Animate scan lines
+    this.scanLines.forEach((line, i) => {
+      line.position.y = 1 + ((this.time * 0.5 + i * 0.2) % 3);
+      line.material.opacity = 0.1 + bass * 0.3;
+    });
+    
+    // Horizon glow on bass
+    this.horizon.material.opacity = 0.5 + bass * 0.5;
+    this.horizon.material.color.setHSL((hue + 0.5) % 1, 1, 0.5);
+    
     this.stars.material.opacity = 0.3 + Math.sin(this.time * 2) * 0.2 + volume * 0.3;
     this.terrain.position.z = -5 + Math.sin(this.time * 0.2) * 2;
     

@@ -31,7 +31,8 @@ export class TextOverlay {
     this.onBeat = false;
     
     // Position (normalized -1 to 1)
-    this.position = { x: 0, y: 0 };
+    // Start at lower-left rule-of-thirds position (golden triangle)
+    this.position = { x: -0.12, y: -0.12 };
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     
@@ -84,8 +85,8 @@ export class TextOverlay {
     });
     
     this.mesh = new THREE.Mesh(geometry, this.material);
-    this.mesh.renderOrder = 999;
-    this.mesh.position.z = 2;
+    this.mesh.renderOrder = 9999;
+    this.mesh.position.z = 4;
     this.scene.add(this.mesh);
     
     // Glow
@@ -99,8 +100,8 @@ export class TextOverlay {
       depthTest: false
     });
     this.glowMesh = new THREE.Mesh(glowGeo, this.glowMaterial);
-    this.glowMesh.renderOrder = 998;
-    this.glowMesh.position.z = 1.9;
+    this.glowMesh.renderOrder = 9998;
+    this.glowMesh.position.z = 3.9;
     this.scene.add(this.glowMesh);
   }
 
@@ -117,9 +118,9 @@ export class TextOverlay {
     const isOverText = (mousePos) => {
       const textX = this.position.x;
       const textY = this.position.y;
-      const scale = this.currentScale * this.settings.size;
-      const halfW = scale * 0.5;
-      const halfH = scale * 0.15;
+      const scale = Math.max(0.5, this.currentScale * (this.settings.size || 1));
+      const halfW = scale * 0.6;  // Larger hit area
+      const halfH = scale * 0.25;  // Larger hit area
       return Math.abs(mousePos.x - textX) < halfW && Math.abs(mousePos.y - textY) < halfH;
     };
     

@@ -11,11 +11,13 @@ import { SpiralMode } from './modes/spiral.js';
 import { GridMode } from './modes/grid.js';
 import { RingsMode } from './modes/rings.js';
 import { StarfieldMode } from './modes/starfield.js';
+import { KaleidoscopeMode } from './modes/kaleidoscope.js';
+import { FluidMode } from './modes/fluid.js';
 import { TextOverlay } from './text-overlay.js';
 import { SmartAudioAnalyzer } from './audio-analyzer.js';
 
-const MODE_CLASSES = [WaveformMode, CircularMode, BarsMode, ParticlesMode, TunnelMode, SphereMode, SpiralMode, GridMode, RingsMode, StarfieldMode];
-const MODE_NAMES = ['WAVEFORM', 'CIRCULAR', 'BARS', 'PARTICLES', 'TUNNEL', 'SPHERE', 'SPIRAL', 'GRID', 'RINGS', 'STARFIELD'];
+const MODE_CLASSES = [WaveformMode, CircularMode, BarsMode, ParticlesMode, TunnelMode, SphereMode, SpiralMode, GridMode, RingsMode, StarfieldMode, KaleidoscopeMode, FluidMode];
+const MODE_NAMES = ['WAVEFORM', 'CIRCULAR', 'BARS', 'PARTICLES', 'TUNNEL', 'SPHERE', 'SPIRAL', 'GRID', 'RINGS', 'STARFIELD', 'KALEIDOSCOPE', 'FLUID'];
 
 export class WaveformVisualizer {
   constructor(canvas) {
@@ -34,8 +36,22 @@ export class WaveformVisualizer {
       saturation: 1, temperature: 0, colorCycle: false, cycleSpeed: 1,
       textSize: 1, textOpacity: 0.9, textReactivity: 1, textGlow: 0.5,
       textColor: '#ffffff', textOutline: false, textOutlineColor: '#000000',
-      textAnim: 'pulse'
+      textAnim: 'pulse',
+      // Auto-cycle settings
+      autoCycle: true,
+      autoCycleBeats: 16,  // Switch every N beats (4, 8, 16, 32, 64)
+      autoCycleMode: 'smart'  // 'smart', 'random', 'sequential'
     };
+    
+    // Auto-cycle state
+    this.beatCount = 0;
+    this.lastBeatState = false;
+    this.morphProgress = 0;
+    this.morphing = false;
+    this.nextModeIndex = null;
+    
+    // Transition style
+    this.transitionStyle = 'fade';
     
     this.smartAnalyzer = new SmartAudioAnalyzer();
     this.init();
@@ -84,14 +100,132 @@ export class WaveformVisualizer {
     this.scene.background = color;
   }
 
-  setMode(index) {
+  setMode(index, silent = false) {
     if (this.mode) this.mode.dispose();
     this.currentModeIndex = index;
     this.mode = new MODE_CLASSES[index](this.scene);
     if (this.mode.setSensitivity) this.mode.setSensitivity(this.settings.sensitivity);
     if (this.textOverlay) this.textOverlay.setMode(index);
-    window.dispatchEvent(new CustomEvent('modechange', { detail: { name: MODE_NAMES[index] } }));
+    if (!silent) {
+      window.dispatchEvent(new CustomEvent('modechange', { detail: { name: MODE_NAMES[index] } }));
+    }
     return MODE_NAMES[index];
+  }
+
+  triggerAutoCycle(energyState) {
+    let nextIndex;
+    
+    if (this.settings.autoCycleMode === 'sequential') {
+      // Sequential: just go to next mode
+      nextIndex = (this.currentModeIndex + 1) % MODE_CLASSES.length;
+    } else if (this.settings.autoCycleMode === 'random') {
+      // Random: pick any mode except current
+      do {
+        nextIndex = Math.floor(Math.random() * MODE_CLASSES.length);
+      } while (nextIndex === this.currentModeIndex && MODE_CLASSES.length > 1);
+    } else {
+      // Smart: weight by energy state
+      // High energy: prefer particles, starfield, tunnel
+      // Low energy: prefer waveform, rings, spiral
+      const highEnergyModes = [3, 4, 9]; // particles, tunnel, starfield
+      const lowEnergyModes = [0, 1, 6, 8]; // waveform, circular, spiral, rings
+      const neutralModes = [2, 5, 7]; // bars, sphere, grid
+      
+      let pool;
+      if (energyState === 'peak') {
+        pool = highEnergyModes;
+      } else if (energyState === 'calm') {
+        pool = lowEnergyModes;
+      } else {
+        pool = [...neutralModes, ...highEnergyModes.slice(0, 1), ...lowEnergyModes.slice(0, 1)];
+      }
+      
+      // Pick from pool, avoid current
+      const filtered = pool.filter(i => i !== this.currentModeIndex);
+      nextIndex = filtered.length > 0 
+        ? filtered[Math.floor(Math.random() * filtered.length)]
+        : (this.currentModeIndex + 1) % MODE_CLASSES.length;
+    }
+    
+    // Start morph transition
+    this.nextModeIndex = nextIndex;
+    this.morphing = true;
+    this.morphProgress = 0;
+    
+    const overlay = document.getElementById('morph-overlay');
+    const style = this.transitionStyle || 'fade';
+    
+    // Apply transition-specific styling
+    if (overlay) {
+      overlay.style.transition = '';
+      overlay.style.transform = '';
+      overlay.style.filter = '';
+      
+      switch (style) {
+        case 'cut':
+          // Instant switch, no transition
+          this.setMode(nextIndex, true);
+          this.morphing = false;
+          this.nextModeIndex = null;
+          this.lastCycleTime = Date.now();
+          return;
+          
+        case 'wipe':
+          overlay.style.transition = 'transform 0.4s ease-in-out';
+          overlay.style.transform = 'translateX(-100%)';
+          overlay.classList.add('active');
+          setTimeout(() => overlay.style.transform = 'translateX(0)', 10);
+          break;
+          
+        case 'zoom':
+          overlay.style.transition = 'opacity 0.3s, transform 0.3s';
+          overlay.style.transform = 'scale(0.8)';
+          overlay.classList.add('active');
+          setTimeout(() => overlay.style.transform = 'scale(1.2)', 10);
+          break;
+          
+        case 'glitch':
+          overlay.style.transition = 'opacity 0.1s';
+          // Rapid flicker effect
+          let flickers = 0;
+          const flickerInterval = setInterval(() => {
+            overlay.classList.toggle('active');
+            flickers++;
+            if (flickers >= 6) {
+              clearInterval(flickerInterval);
+              overlay.classList.add('active');
+            }
+          }, 50);
+          break;
+          
+        case 'fade':
+        default:
+          overlay.style.transition = 'opacity 0.4s ease-in-out';
+          overlay.classList.add('active');
+          break;
+      }
+      
+      // Switch mode at peak
+      setTimeout(() => {
+        this.setMode(nextIndex, true);
+        this.morphing = false;
+        this.nextModeIndex = null;
+        this.lastCycleTime = Date.now();
+      }, style === 'glitch' ? 300 : 400);
+      
+      // Fade back
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        overlay.style.pointerEvents = 'none';
+        if (style === 'wipe') overlay.style.transform = 'translateX(-100%)';
+        if (style === 'zoom') overlay.style.transform = 'scale(1)';
+      }, style === 'glitch' ? 350 : 500);
+    } else {
+      this.setMode(nextIndex, true);
+      this.morphing = false;
+      this.nextModeIndex = null;
+      this.lastCycleTime = Date.now();
+    }
   }
 
   update(audioData) {
@@ -99,7 +233,31 @@ export class WaveformVisualizer {
     
     this.time += 0.016 * this.settings.animSpeed;
     const smartData = this.smartAnalyzer.analyze(audioData);
-    const { bass = 0, volume = 0, onBeat = false } = smartData;
+    const { bass = 0, volume = 0, onBeat = false, energyState = 'normal' } = smartData;
+    
+    // Auto-cycle: count beats and switch modes
+    if (this.settings.autoCycle) {
+      // Detect beat edge (rising)
+      if (onBeat && !this.lastBeatState) {
+        this.beatCount++;
+        
+        // Check if we should switch
+        if (this.beatCount >= this.settings.autoCycleBeats) {
+          this.beatCount = 0;
+          this.triggerAutoCycle(energyState);
+        }
+      }
+      this.lastBeatState = onBeat;
+      
+      // Fallback: time-based cycle if no beats detected for too long
+      if (!this.lastCycleTime) this.lastCycleTime = Date.now();
+      const timeSinceCycle = Date.now() - this.lastCycleTime;
+      const fallbackMs = (this.settings.autoCycleBeats / 2) * 1000; // ~8 sec for 16 beats at 120bpm
+      if (timeSinceCycle > fallbackMs && !this.morphing) {
+        this.beatCount = 0;
+        this.triggerAutoCycle(energyState);
+      }
+    }
     
     // Color cycling
     if (this.settings.colorCycle) {
