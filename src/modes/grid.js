@@ -1,0 +1,134 @@
+import * as THREE from 'three';
+
+export class GridMode {
+  constructor(scene) {
+    this.scene = scene;
+    this.objects = [];
+    this.time = 0;
+    this.init();
+  }
+
+  init() {
+    // Create terrain mesh
+    const size = 30;
+    const segments = 60;
+    const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
+    
+    this.originalPositions = geometry.attributes.position.array.slice();
+    
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.8
+    });
+    
+    this.terrain = new THREE.Mesh(geometry, material);
+    this.terrain.rotation.x = -Math.PI / 2.5;
+    this.terrain.position.y = -2;
+    this.terrain.position.z = -5;
+    this.scene.add(this.terrain);
+    this.objects.push(this.terrain);
+    
+    // Horizon line
+    const horizonGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-20, 0, -15),
+      new THREE.Vector3(20, 0, -15)
+    ]);
+    this.horizon = new THREE.Line(horizonGeo, new THREE.LineBasicMaterial({
+      color: 0xff00ff,
+      transparent: true,
+      opacity: 0.8
+    }));
+    this.scene.add(this.horizon);
+    this.objects.push(this.horizon);
+    
+    // Sun/moon
+    const sunGeo = new THREE.CircleGeometry(2, 32);
+    const sunMat = new THREE.MeshBasicMaterial({
+      color: 0xff6600,
+      transparent: true,
+      opacity: 0.9
+    });
+    this.sun = new THREE.Mesh(sunGeo, sunMat);
+    this.sun.position.set(0, 3, -14);
+    this.scene.add(this.sun);
+    this.objects.push(this.sun);
+    
+    // Stars
+    const starCount = 300;
+    const starGeo = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      starPositions[i * 3] = (Math.random() - 0.5) * 40;
+      starPositions[i * 3 + 1] = Math.random() * 10 + 2;
+      starPositions[i * 3 + 2] = -10 - Math.random() * 5;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    this.stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.05,
+      transparent: true
+    }));
+    this.scene.add(this.stars);
+    this.objects.push(this.stars);
+  }
+
+  update(audioData) {
+    const { waveform, frequencies, bass, volume, mids } = audioData;
+    if (!waveform || !frequencies) return;
+    
+    this.time += 0.05 + bass * 0.1;
+    
+    // Animate terrain
+    const positions = this.terrain.geometry.attributes.position.array;
+    const vertCount = positions.length / 3;
+    const gridSize = Math.sqrt(vertCount);
+    
+    for (let i = 0; i < vertCount; i++) {
+      const x = i % gridSize;
+      const y = Math.floor(i / gridSize);
+      
+      // Wave effect
+      const ox = this.originalPositions[i * 3];
+      const oy = this.originalPositions[i * 3 + 1];
+      
+      // Map to frequency data
+      const freqIdx = Math.floor((x / gridSize) * frequencies.length);
+      const freqVal = frequencies[freqIdx] / 255;
+      
+      // Ripple from center + frequency height
+      const distFromCenter = Math.sqrt(ox * ox + oy * oy);
+      const wave = Math.sin(distFromCenter * 0.5 - this.time) * 0.5;
+      const height = wave + freqVal * 3 + bass * 2;
+      
+      positions[i * 3 + 2] = height;
+    }
+    this.terrain.geometry.attributes.position.needsUpdate = true;
+    
+    // Color shift
+    const hue = (this.time * 0.02) % 1;
+    this.terrain.material.color.setHSL(hue, 1, 0.5);
+    
+    // Pulse sun
+    const sunScale = 1 + bass * 0.5;
+    this.sun.scale.set(sunScale, sunScale, 1);
+    this.sun.material.color.setHSL((hue + 0.1) % 1, 1, 0.5);
+    
+    // Stars twinkle
+    this.stars.material.opacity = 0.3 + Math.sin(this.time * 2) * 0.2 + volume * 0.3;
+    
+    // Move terrain forward
+    this.terrain.position.z = -5 + Math.sin(this.time * 0.2) * 2;
+    
+    return { shake: bass * 0.05, bloomBoost: volume * 1.2 };
+  }
+
+  dispose() {
+    this.objects.forEach(obj => {
+      this.scene.remove(obj);
+      obj.geometry.dispose();
+      obj.material.dispose();
+    });
+  }
+}

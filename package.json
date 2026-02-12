@@ -1,0 +1,19 @@
+{
+  "name": "music-visualizer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.1.4",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "postprocessing": "^6.38.2",
+    "three": "^0.182.0"
+  }
+}
