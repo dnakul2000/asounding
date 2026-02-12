@@ -1,52 +1,68 @@
 import * as THREE from 'three';
 
-// Font styles per mode
-const MODE_FONTS = [
-  { font: 'bold 80px "Arial Black"', style: 'aggressive' },      // Waveform
-  { font: 'bold 80px "Helvetica Neue", sans-serif', style: 'clean' }, // Circular
-  { font: 'bold 80px "Impact", sans-serif', style: 'bold' },     // Bars
-  { font: '80px "Orbitron", "Arial Black", sans-serif', style: 'tech' }, // Particles
-  { font: 'bold italic 80px "Arial"', style: 'speed' },          // Tunnel
-  { font: '80px "Helvetica Neue", sans-serif', style: 'minimal' }, // Sphere
-  { font: 'bold 80px "Georgia", serif', style: 'elegant' },      // Spiral
-  { font: '80px "Courier New", monospace', style: 'retro' },     // Grid
-  { font: 'bold 80px "Trebuchet MS", sans-serif', style: 'modern' }, // Rings
-  { font: '300 80px "Helvetica Neue", sans-serif', style: 'light' }  // Starfield
+const FONTS = [
+  { name: 'Bebas Neue', value: 'Bebas Neue' },
+  { name: 'Montserrat', value: 'Montserrat' },
+  { name: 'Oswald', value: 'Oswald' },
+  { name: 'Rajdhani', value: 'Rajdhani' },
+  { name: 'Orbitron', value: 'Orbitron' },
+  { name: 'Press Start 2P', value: 'Press Start 2P' },
+  { name: 'Teko', value: 'Teko' },
+  { name: 'Anton', value: 'Anton' },
+  { name: 'Black Ops One', value: 'Black Ops One' },
+  { name: 'Righteous', value: 'Righteous' }
 ];
 
-const FONT_OPTIONS = [
-  { name: 'Auto', value: 'auto' },
-  { name: 'Bold', value: 'bold 80px "Arial Black", sans-serif' },
-  { name: 'Clean', value: '80px "Helvetica Neue", sans-serif' },
-  { name: 'Elegant', value: 'bold 80px "Georgia", serif' },
-  { name: 'Retro', value: '80px "Courier New", monospace' },
-  { name: 'Light', value: '300 80px "Helvetica Neue", sans-serif' },
-  { name: 'Impact', value: 'bold 80px "Impact", sans-serif' }
-];
-
-export { FONT_OPTIONS };
+export { FONTS };
 
 export class TextOverlay {
-  constructor(scene) {
+  constructor(scene, camera, renderer) {
     this.scene = scene;
+    this.camera = camera;
+    this.renderer = renderer;
     this.mesh = null;
-    this.currentScale = 0.4;
+    this.currentScale = 1;
     this.baseColor = new THREE.Color(0xffffff);
     this.time = 0;
-    this.modeIndex = 0;
     this.text = 'NAKUL';
-    this.customFont = 'auto';
+    this.font = 'Bebas Neue';
+    this.fontSize = 80;
     this.intensity = 0.5;
     this.onBeat = false;
     
+    // Position (normalized -1 to 1)
+    this.position = { x: 0, y: 0 };
+    this.isDragging = false;
+    this.dragOffset = { x: 0, y: 0 };
+    
+    // Settings
+    this.settings = {
+      size: 1,
+      opacity: 0.9,
+      outline: false,
+      outlineColor: '#000000',
+      shadow: true,
+      reactivity: 1
+    };
+    
+    this.loadFonts();
     this.createText();
+    this.setupDrag();
+  }
+
+  loadFonts() {
+    // Load Google Fonts
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@700;900&family=Oswald:wght@700&family=Rajdhani:wght@700&family=Orbitron:wght@700;900&family=Press+Start+2P&family=Teko:wght@700&family=Anton&family=Black+Ops+One&family=Righteous&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
   }
 
   createText() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 512;
-    canvas.height = 128;
+    canvas.width = 1024;
+    canvas.height = 256;
     this.canvas = canvas;
     this.ctx = ctx;
     
@@ -55,37 +71,88 @@ export class TextOverlay {
     this.texture = new THREE.CanvasTexture(canvas);
     this.texture.needsUpdate = true;
     
-    const geometry = new THREE.PlaneGeometry(2.5, 0.6);
+    const geometry = new THREE.PlaneGeometry(4, 1);
     this.material = new THREE.MeshBasicMaterial({
       map: this.texture,
       transparent: true,
-      opacity: 0.85,
+      opacity: this.settings.opacity,
       blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      depthTest: false
     });
     
     this.mesh = new THREE.Mesh(geometry, this.material);
-    this.mesh.position.z = 1;
+    this.mesh.renderOrder = 999;
+    this.mesh.position.z = 2;
     this.scene.add(this.mesh);
     
-    const glowGeo = new THREE.PlaneGeometry(3, 0.8);
+    // Glow
+    const glowGeo = new THREE.PlaneGeometry(4.5, 1.2);
     this.glowMaterial = new THREE.MeshBasicMaterial({
       map: this.texture,
       transparent: true,
-      opacity: 0.15,
+      opacity: 0.2,
       blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      depthTest: false
     });
     this.glowMesh = new THREE.Mesh(glowGeo, this.glowMaterial);
-    this.glowMesh.position.z = 0.9;
+    this.glowMesh.renderOrder = 998;
+    this.glowMesh.position.z = 1.9;
     this.scene.add(this.glowMesh);
   }
 
-  getFont() {
-    if (this.customFont !== 'auto') {
-      return this.customFont;
-    }
-    return MODE_FONTS[this.modeIndex]?.font || 'bold 80px Arial';
+  setupDrag() {
+    const canvas = this.renderer.domElement;
+    
+    const getMousePos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      return { x, y };
+    };
+    
+    const isOverText = (mousePos) => {
+      const textX = this.position.x;
+      const textY = this.position.y;
+      const scale = this.currentScale * this.settings.size;
+      const halfW = scale * 0.5;
+      const halfH = scale * 0.15;
+      return Math.abs(mousePos.x - textX) < halfW && Math.abs(mousePos.y - textY) < halfH;
+    };
+    
+    canvas.addEventListener('mousedown', (e) => {
+      const pos = getMousePos(e);
+      if (isOverText(pos)) {
+        this.isDragging = true;
+        this.dragOffset.x = pos.x - this.position.x;
+        this.dragOffset.y = pos.y - this.position.y;
+        canvas.style.cursor = 'grabbing';
+        e.preventDefault();
+      }
+    });
+    
+    canvas.addEventListener('mousemove', (e) => {
+      const pos = getMousePos(e);
+      if (this.isDragging) {
+        this.position.x = pos.x - this.dragOffset.x;
+        this.position.y = pos.y - this.dragOffset.y;
+        // Clamp to screen
+        this.position.x = Math.max(-1.5, Math.min(1.5, this.position.x));
+        this.position.y = Math.max(-1, Math.min(1, this.position.y));
+      } else {
+        canvas.style.cursor = isOverText(pos) ? 'grab' : 'default';
+      }
+    });
+    
+    canvas.addEventListener('mouseup', () => {
+      this.isDragging = false;
+      canvas.style.cursor = 'default';
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+      this.isDragging = false;
+    });
   }
 
   drawText() {
@@ -94,15 +161,27 @@ export class TextOverlay {
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Subtle shadow for depth
-    ctx.shadowColor = `rgba(${Math.floor(this.baseColor.r * 255)}, ${Math.floor(this.baseColor.g * 255)}, ${Math.floor(this.baseColor.b * 255)}, 0.5)`;
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    
-    ctx.font = this.getFont();
+    const fontSize = this.fontSize * (this.settings.size || 1);
+    ctx.font = `900 ${fontSize}px "${this.font}", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    
+    // Shadow
+    if (this.settings.shadow) {
+      ctx.shadowColor = `rgba(${Math.floor(this.baseColor.r * 255)}, ${Math.floor(this.baseColor.g * 255)}, ${Math.floor(this.baseColor.b * 255)}, 0.6)`;
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+    
+    // Outline
+    if (this.settings.outline) {
+      ctx.strokeStyle = this.settings.outlineColor;
+      ctx.lineWidth = 4;
+      ctx.strokeText(this.text, canvas.width / 2, canvas.height / 2);
+    }
+    
+    // Fill
     ctx.fillStyle = `rgb(${Math.floor(this.baseColor.r * 255)}, ${Math.floor(this.baseColor.g * 255)}, ${Math.floor(this.baseColor.b * 255)})`;
     ctx.fillText(this.text, canvas.width / 2, canvas.height / 2);
     
@@ -118,16 +197,10 @@ export class TextOverlay {
     this.drawText();
   }
 
-  setFont(fontValue) {
-    this.customFont = fontValue;
-    this.drawText();
-  }
-
-  setMode(index) {
-    this.modeIndex = index;
-    if (this.customFont === 'auto') {
-      this.drawText();
-    }
+  setFont(fontName) {
+    this.font = fontName;
+    // Wait for font to load
+    setTimeout(() => this.drawText(), 100);
   }
 
   setColor(color) {
@@ -135,107 +208,52 @@ export class TextOverlay {
     this.drawText();
   }
 
-  update(audioData, modeColor = null) {
+  updateSettings(newSettings) {
+    Object.assign(this.settings, newSettings);
+    this.drawText();
+  }
+
+  update(audioData) {
     if (!this.mesh) return;
     
-    const { bass, volume, mids, intensity = 0.5, onBeat = false, energyState = 'normal' } = audioData;
+    const { bass = 0, volume = 0, intensity = 0.5, onBeat = false } = audioData;
     this.time += 0.016;
     this.intensity = intensity;
     this.onBeat = onBeat;
     
-    if (modeColor) {
-      this.baseColor.set(modeColor);
-      this.drawText();
-    }
+    const reactivity = this.settings.reactivity || 1;
     
-    // Scale based on intensity (smarter now)
-    let baseScale = 0.35 + intensity * 0.25;
-    if (onBeat) baseScale += 0.1;
-    if (energyState === 'peak') baseScale *= 1.15;
-    if (energyState === 'calm') baseScale *= 0.85;
+    // Scale reactivity
+    let targetScale = this.settings.size || 1;
+    targetScale += bass * 0.3 * reactivity;
+    if (onBeat) targetScale += 0.15 * reactivity;
     
-    const targetScale = baseScale + bass * 0.2;
-    this.currentScale += (targetScale - this.currentScale) * 0.25;
+    this.currentScale += (targetScale - this.currentScale) * 0.2;
     
-    // Mode-specific animations (toned down for cleaner look)
-    const animIntensity = intensity * 0.5; // Less aggressive
+    // Subtle shake on bass (not position-based)
+    const shakeX = (Math.random() - 0.5) * bass * 0.02 * reactivity;
+    const shakeY = (Math.random() - 0.5) * bass * 0.02 * reactivity;
     
-    switch (this.modeIndex) {
-      case 0: // Waveform
-        this.mesh.position.x = Math.sin(this.time * 8) * animIntensity * 0.2;
-        this.mesh.position.y = 0;
-        this.mesh.rotation.z = Math.sin(this.time * 6) * animIntensity * 0.05;
-        break;
-        
-      case 1: // Circular
-        this.mesh.rotation.z += 0.01 + bass * 0.05;
-        this.mesh.position.x = 0;
-        this.mesh.position.y = 0;
-        break;
-        
-      case 2: // Bars
-        this.mesh.position.x = 0;
-        this.mesh.position.y = Math.abs(Math.sin(this.time * 5)) * animIntensity * 0.4;
-        this.mesh.rotation.z = 0;
-        break;
-        
-      case 3: // Particles
-        this.mesh.position.x = Math.cos(this.time * 1.5) * 0.3;
-        this.mesh.position.y = Math.sin(this.time * 1.5) * 0.2;
-        this.mesh.rotation.z = Math.sin(this.time * 0.5) * 0.05;
-        break;
-        
-      case 4: // Tunnel
-        this.mesh.position.x = 0;
-        this.mesh.position.y = 0;
-        this.mesh.position.z = 1 + intensity;
-        this.mesh.rotation.z = this.time * 0.3;
-        break;
-        
-      case 5: // Sphere
-        this.mesh.position.x = Math.sin(this.time) * 0.2;
-        this.mesh.position.y = Math.cos(this.time * 0.8) * 0.15;
-        this.mesh.rotation.z = Math.sin(this.time * 0.3) * 0.08;
-        break;
-        
-      case 6: // Spiral
-        this.mesh.position.x = 0;
-        this.mesh.position.y = Math.sin(this.time) * 0.3;
-        this.mesh.rotation.z = this.time * 0.5 + onBeat * Math.PI * 0.1;
-        break;
-        
-      case 7: // Grid
-        this.mesh.position.x = Math.sin(this.time * 2) * 0.15;
-        this.mesh.position.y = 1.2;
-        this.mesh.rotation.z = 0;
-        break;
-        
-      case 8: // Rings
-        this.mesh.position.x = 0;
-        this.mesh.position.y = 0;
-        this.mesh.rotation.z = 0;
-        break;
-        
-      case 9: // Starfield
-        this.mesh.position.x = 0;
-        this.mesh.position.y = 0;
-        this.mesh.position.z = 1 + Math.sin(this.time * 0.5) * 0.3;
-        this.mesh.rotation.z = 0;
-        break;
-    }
+    // Convert normalized position to world position
+    const worldX = this.position.x * 4 + shakeX;
+    const worldY = this.position.y * 2.5 + shakeY;
     
-    // Apply scale
+    this.mesh.position.x = worldX;
+    this.mesh.position.y = worldY;
     this.mesh.scale.set(this.currentScale, this.currentScale, 1);
-    this.glowMesh.scale.set(this.currentScale * 1.2, this.currentScale * 1.2, 1);
     
-    // Sync glow
-    this.glowMesh.position.copy(this.mesh.position);
-    this.glowMesh.position.z -= 0.1;
+    // Subtle rotation
+    this.mesh.rotation.z = Math.sin(this.time * 2) * 0.02 * reactivity * bass;
+    
+    // Glow follows
+    this.glowMesh.position.x = worldX;
+    this.glowMesh.position.y = worldY;
+    this.glowMesh.scale.set(this.currentScale * 1.15, this.currentScale * 1.15, 1);
     this.glowMesh.rotation.z = this.mesh.rotation.z;
     
-    // Opacity based on intensity
-    this.material.opacity = 0.5 + intensity * 0.4;
-    this.glowMaterial.opacity = 0.1 + intensity * 0.2;
+    // Opacity
+    this.material.opacity = (this.settings.opacity || 0.9) * (0.7 + intensity * 0.3);
+    this.glowMaterial.opacity = 0.1 + bass * 0.3;
   }
 
   dispose() {

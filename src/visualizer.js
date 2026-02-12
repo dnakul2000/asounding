@@ -91,7 +91,7 @@ export class WaveformVisualizer {
     this.setupPostProcessing();
     
     // Text overlay
-    this.textOverlay = new TextOverlay(this.scene);
+    this.textOverlay = new TextOverlay(this.scene, this.camera, this.renderer);
 
     // Event handlers
     window.addEventListener('resize', () => this.onResize());
@@ -216,6 +216,19 @@ export class WaveformVisualizer {
     // Update font
     if (newSettings.font !== undefined && this.textOverlay) {
       this.textOverlay.setFont(newSettings.font);
+    }
+    
+    // Update text settings
+    if (this.textOverlay) {
+      const textSettings = {};
+      if (newSettings.textSize !== undefined) textSettings.size = newSettings.textSize;
+      if (newSettings.textOpacity !== undefined) textSettings.opacity = newSettings.textOpacity;
+      if (newSettings.textReactivity !== undefined) textSettings.reactivity = newSettings.textReactivity;
+      if (newSettings.textOutline !== undefined) textSettings.outline = newSettings.textOutline;
+      if (newSettings.textShadow !== undefined) textSettings.shadow = newSettings.textShadow;
+      if (Object.keys(textSettings).length > 0) {
+        this.textOverlay.updateSettings(textSettings);
+      }
     }
   }
 

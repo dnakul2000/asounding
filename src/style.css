@@ -9,7 +9,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #000;
-  font-family: 'Courier New', monospace;
+  font-family: 'Helvetica Neue', sans-serif;
 }
 
 #app {
@@ -37,7 +37,7 @@ html, body {
   font-size: 72px;
   font-weight: bold;
   color: #fff;
-  text-shadow: 0 0 30px rgba(255,255,255,0.8), 0 0 60px rgba(255,255,255,0.4);
+  text-shadow: 0 0 30px rgba(255,255,255,0.8);
   letter-spacing: 20px;
   opacity: 0;
   transition: opacity 0.3s;
@@ -45,13 +45,8 @@ html, body {
   z-index: 200;
 }
 
-#mode-display.show {
-  opacity: 1;
-}
-
-#mode-display.hidden {
-  display: none;
-}
+#mode-display.show { opacity: 1; }
+#mode-display.hidden { display: none; }
 
 #controls {
   position: fixed;
@@ -61,7 +56,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 15px;
   z-index: 100;
   transition: opacity 0.3s, transform 0.3s;
 }
@@ -74,19 +69,19 @@ html, body {
 
 #source-buttons {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .source-btn {
-  padding: 18px 36px;
-  font-size: 16px;
+  padding: 14px 28px;
+  font-size: 14px;
   background: transparent;
   color: #fff;
-  border: 2px solid #fff;
+  border: 1px solid rgba(255,255,255,0.5);
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   transition: all 0.15s;
   font-family: inherit;
 }
@@ -94,7 +89,6 @@ html, body {
 .source-btn:hover {
   background: #fff;
   color: #000;
-  transform: scale(1.05);
 }
 
 .source-btn.primary {
@@ -105,7 +99,6 @@ html, body {
 .source-btn.primary:hover {
   background: transparent;
   color: #fff;
-  transform: scale(1.05);
 }
 
 #source-buttons.autohide,
@@ -115,11 +108,10 @@ html, body {
 }
 
 #hint {
-  color: rgba(255,255,255,0.5);
-  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  font-size: 11px;
   text-align: center;
-  max-width: 400px;
-  margin-top: 16px;
+  margin-top: 12px;
   text-transform: uppercase;
   letter-spacing: 2px;
 }
@@ -127,44 +119,65 @@ html, body {
 #settings {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 20px 30px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 15px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 8px;
+  max-width: 600px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-title {
+  font-size: 9px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .settings-row {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 #settings label {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  color: rgba(255,255,255,0.8);
-  font-size: 11px;
+  gap: 5px;
+  color: rgba(255,255,255,0.6);
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
 }
 
 #settings input[type="range"] {
-  width: 120px;
+  width: 80px;
+  height: 4px;
   accent-color: #fff;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
 }
 
 #settings input[type="text"] {
   width: 100px;
-  padding: 6px 10px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.3);
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 600;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -172,23 +185,24 @@ html, body {
 
 #settings input[type="text"]:focus {
   outline: none;
-  border-color: #fff;
-  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.1);
 }
 
 #settings select {
-  padding: 6px 10px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.3);
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
+  min-width: 100px;
 }
 
 #settings select:focus {
   outline: none;
-  border-color: #fff;
+  border-color: rgba(255,255,255,0.5);
 }
 
 #settings select option {
@@ -196,41 +210,34 @@ html, body {
   color: #fff;
 }
 
-.mode-keys, .mode-names {
-  gap: 8px !important;
+.mode-keys {
+  gap: 6px !important;
+  margin-top: 5px;
 }
 
 .mode-keys span {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255,255,255,0.3);
-  color: rgba(255,255,255,0.6);
-  font-size: 12px;
-}
-
-.mode-names span {
-  width: 28px;
-  font-size: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
   color: rgba(255,255,255,0.4);
-  text-align: center;
+  font-size: 10px;
+  border-radius: 3px;
 }
 
 #zoom-hint {
   position: fixed;
-  top: 20px;
+  top: 15px;
   left: 50%;
   transform: translateX(-50%);
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 3px;
   pointer-events: none;
   transition: opacity 0.3s;
 }
 
-#zoom-hint.hidden {
-  opacity: 0;
-}
+#zoom-hint.hidden { opacity: 0; }

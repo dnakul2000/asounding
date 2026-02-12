@@ -10,10 +10,15 @@ const hint = document.getElementById('hint');
 const settings = document.getElementById('settings');
 const zoomHint = document.getElementById('zoom-hint');
 const modeDisplay = document.getElementById('mode-display');
-const sensitivityInput = document.getElementById('sensitivity');
-const bloomInput = document.getElementById('bloom');
+
+// Controls
 const customTextInput = document.getElementById('custom-text');
 const fontSelect = document.getElementById('font-select');
+const textSizeInput = document.getElementById('text-size');
+const textOpacityInput = document.getElementById('text-opacity');
+const textReactivityInput = document.getElementById('text-reactivity');
+const sensitivityInput = document.getElementById('sensitivity');
+const bloomInput = document.getElementById('bloom');
 
 let audio = null;
 let visualizer = null;
@@ -26,7 +31,6 @@ try {
   console.log('Visualizer initialized');
 } catch (e) {
   console.error('Failed to init visualizer:', e);
-  alert('Visualizer init failed: ' + e.message);
 }
 
 window.addEventListener('modechange', (e) => {
@@ -51,7 +55,7 @@ function showControls() {
       controls.classList.add('hidden');
       if (zoomHint) zoomHint.classList.add('hidden');
       controlsVisible = false;
-    }, 3000);
+    }, 4000);
   }
 }
 
@@ -98,10 +102,14 @@ function animate() {
   });
 }
 
-sensitivityInput?.addEventListener('input', (e) => visualizer.updateSettings({ sensitivity: parseFloat(e.target.value) }));
-bloomInput?.addEventListener('input', (e) => visualizer.updateSettings({ bloomIntensity: parseFloat(e.target.value) }));
+// Control handlers
 customTextInput?.addEventListener('input', (e) => visualizer.updateSettings({ text: e.target.value }));
 fontSelect?.addEventListener('change', (e) => visualizer.updateSettings({ font: e.target.value }));
+textSizeInput?.addEventListener('input', (e) => visualizer.updateSettings({ textSize: parseFloat(e.target.value) }));
+textOpacityInput?.addEventListener('input', (e) => visualizer.updateSettings({ textOpacity: parseFloat(e.target.value) }));
+textReactivityInput?.addEventListener('input', (e) => visualizer.updateSettings({ textReactivity: parseFloat(e.target.value) }));
+sensitivityInput?.addEventListener('input', (e) => visualizer.updateSettings({ sensitivity: parseFloat(e.target.value) }));
+bloomInput?.addEventListener('input', (e) => visualizer.updateSettings({ bloomIntensity: parseFloat(e.target.value) }));
 
 document.addEventListener('mousemove', showControls);
 document.addEventListener('touchstart', showControls);
@@ -111,7 +119,7 @@ canvas.addEventListener('dblclick', () => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   
   if (e.key >= '1' && e.key <= '9') { visualizer.setMode(parseInt(e.key) - 1); return; }
   if (e.key === '0') { visualizer.setMode(9); return; }
