@@ -203,6 +203,10 @@ export class TextOverlay {
     setTimeout(() => this.drawText(), 100);
   }
 
+  setMode(index) {
+    // No longer used for positioning, but kept for compatibility
+  }
+
   setColor(color) {
     this.baseColor.set(color);
     this.drawText();
