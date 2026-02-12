@@ -108,7 +108,9 @@ export class TextOverlay {
     
     ctx.shadowBlur = 0;
     
-    this.texture.needsUpdate = true;
+    if (this.texture) {
+      this.texture.needsUpdate = true;
+    }
   }
 
   setText(newText) {
