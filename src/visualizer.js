@@ -11,6 +11,7 @@ import { SpiralMode } from './modes/spiral.js';
 import { GridMode } from './modes/grid.js';
 import { RingsMode } from './modes/rings.js';
 import { StarfieldMode } from './modes/starfield.js';
+import { TextOverlay } from './text-overlay.js';
 
 const MODE_CLASSES = [
   WaveformMode,   // 1
@@ -30,6 +31,20 @@ const MODE_NAMES = [
   'SPHERE', 'SPIRAL', 'GRID', 'RINGS', 'STARFIELD'
 ];
 
+// Default colors for each mode
+const MODE_COLORS = [
+  '#ff0000', // Waveform - red
+  '#00ffff', // Circular - cyan
+  '#00ff00', // Bars - green
+  '#ff00ff', // Particles - magenta
+  '#ff00ff', // Tunnel - magenta
+  '#00ffff', // Sphere - cyan
+  '#ff6600', // Spiral - orange
+  '#00ff00', // Grid - green
+  '#ff0066', // Rings - pink
+  '#ffffff'  // Starfield - white
+];
+
 export class WaveformVisualizer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -37,7 +52,8 @@ export class WaveformVisualizer {
     this.mode = null;
     this.settings = {
       zoom: 1,
-      bloomIntensity: 1.5
+      bloomIntensity: 1.5,
+      sensitivity: 2.0
     };
     
     this.init();
@@ -71,6 +87,9 @@ export class WaveformVisualizer {
 
     // Post-processing
     this.setupPostProcessing();
+    
+    // Text overlay
+    this.textOverlay = new TextOverlay(this.scene);
 
     // Event handlers
     window.addEventListener('resize', () => this.onResize());
@@ -115,6 +134,14 @@ export class WaveformVisualizer {
     const ModeClass = MODE_CLASSES[index];
     this.mode = new ModeClass(this.scene);
     
+    // Pass sensitivity to mode
+    if (this.mode.setSensitivity) {
+      this.mode.setSensitivity(this.settings.sensitivity);
+    }
+    
+    // Update text color for mode
+    this.textOverlay.setColor(MODE_COLORS[index]);
+    
     // Show mode name briefly
     this.showModeName(MODE_NAMES[index]);
     
@@ -122,7 +149,6 @@ export class WaveformVisualizer {
   }
 
   showModeName(name) {
-    // Dispatch event for UI to show
     window.dispatchEvent(new CustomEvent('modechange', { detail: { name } }));
   }
 
@@ -133,8 +159,18 @@ export class WaveformVisualizer {
   update(audioData) {
     if (!this.mode) return;
     
-    const result = this.mode.update(audioData) || {};
-    const { shake = 0, bloomBoost = 0 } = result;
+    // Apply sensitivity to audio data
+    const sensitizedData = {
+      ...audioData,
+      sensitivity: this.settings.sensitivity
+    };
+    
+    const result = this.mode.update(sensitizedData) || {};
+    const { shake = 0, bloomBoost = 0, color = null } = result;
+    
+    // Update text overlay
+    const modeColor = color || MODE_COLORS[this.currentModeIndex];
+    this.textOverlay.update(audioData, modeColor);
     
     // Camera
     const targetZ = this.baseZoom / this.settings.zoom;
@@ -160,6 +196,11 @@ export class WaveformVisualizer {
 
   updateSettings(newSettings) {
     Object.assign(this.settings, newSettings);
+    
+    // Pass sensitivity to current mode
+    if (this.mode && this.mode.setSensitivity && newSettings.sensitivity !== undefined) {
+      this.mode.setSensitivity(newSettings.sensitivity);
+    }
   }
 
   onResize() {
@@ -171,6 +212,7 @@ export class WaveformVisualizer {
 
   dispose() {
     if (this.mode) this.mode.dispose();
+    if (this.textOverlay) this.textOverlay.dispose();
     this.composer.dispose();
     this.renderer.dispose();
   }

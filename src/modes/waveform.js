@@ -4,18 +4,17 @@ export class WaveformMode {
   constructor(scene) {
     this.scene = scene;
     this.objects = [];
-    this.settings = {
-      colorStart: '#ff0000',
-      colorEnd: '#ffff00',
-      sensitivity: 2.5
-    };
+    this.sensitivity = 2.0;
     this.init();
+  }
+
+  setSensitivity(val) {
+    this.sensitivity = val;
   }
 
   init() {
     const segments = 512;
     
-    // Main waveform
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(segments * 3);
     const colors = new Float32Array(segments * 3);
@@ -36,13 +35,11 @@ export class WaveformMode {
     this.scene.add(this.mainWave);
     this.objects.push(this.mainWave);
     
-    // Mirror
     this.mirrorWave = new THREE.Line(geometry.clone(), new THREE.LineBasicMaterial({ vertexColors: true }));
     this.mirrorWave.scale.y = -1;
     this.scene.add(this.mirrorWave);
     this.objects.push(this.mirrorWave);
     
-    // Trails
     this.trails = [];
     for (let t = 0; t < 15; t++) {
       const trail = new THREE.Line(
@@ -78,7 +75,6 @@ export class WaveformMode {
     const { waveform, bass, volume } = audioData;
     if (!waveform) return;
     
-    // Shift trails
     for (let t = this.trails.length - 1; t >= 2; t--) {
       const curr = this.trails[t].geometry.attributes.position.array;
       const prev = this.trails[t - 2].geometry.attributes.position.array;
@@ -86,7 +82,6 @@ export class WaveformMode {
       this.trails[t].geometry.attributes.position.needsUpdate = true;
     }
     
-    // Update main waveforms
     [this.mainWave, this.mirrorWave].forEach(wave => {
       const pos = wave.geometry.attributes.position.array;
       const col = wave.geometry.attributes.color.array;
@@ -94,7 +89,7 @@ export class WaveformMode {
       const step = Math.floor(waveform.length / segments);
       
       for (let i = 0; i < segments; i++) {
-        const val = ((waveform[i * step] / 128) - 1) * this.settings.sensitivity;
+        const val = ((waveform[i * step] / 128) - 1) * this.sensitivity;
         pos[i * 3 + 1] = val * (1 + bass * 3);
         
         const t = Math.abs(val) * 2;
@@ -106,7 +101,6 @@ export class WaveformMode {
       wave.geometry.attributes.color.needsUpdate = true;
     });
     
-    // Copy to first trails
     if (this.trails.length > 1) {
       const mainPos = this.mainWave.geometry.attributes.position.array;
       this.trails[0].geometry.attributes.position.array.set(mainPos);
@@ -115,7 +109,7 @@ export class WaveformMode {
       this.trails[1].geometry.attributes.position.needsUpdate = true;
     }
     
-    return { shake: bass * 0.15, bloomBoost: volume };
+    return { shake: bass * 0.15, bloomBoost: volume, color: '#ff0000' };
   }
 
   dispose() {
