@@ -1,5 +1,6 @@
 import { AudioAnalyzer } from './audio.js';
 import { WaveformVisualizer } from './visualizer.js';
+import { PRESETS, mergePreset } from './presets.js';
 
 const canvas = document.getElementById('visualizer');
 const controls = document.getElementById('controls');
@@ -11,29 +12,165 @@ const settings = document.getElementById('settings');
 const zoomHint = document.getElementById('zoom-hint');
 const modeDisplay = document.getElementById('mode-display');
 
-// Controls
-const customTextInput = document.getElementById('custom-text');
-const fontSelect = document.getElementById('font-select');
-const textSizeInput = document.getElementById('text-size');
-const textOpacityInput = document.getElementById('text-opacity');
-const textReactivityInput = document.getElementById('text-reactivity');
-const sensitivityInput = document.getElementById('sensitivity');
-const bloomInput = document.getElementById('bloom');
-
 let audio = null;
 let visualizer = null;
 let isRunning = false;
 let hideTimeout = null;
 let controlsVisible = true;
+let currentSettings = { ...PRESETS.default };
 
 try {
   visualizer = new WaveformVisualizer(canvas);
-  console.log('Visualizer initialized successfully');
+  console.log('Visualizer initialized');
 } catch (e) {
-  console.error('Failed to init visualizer:', e);
-  console.error('Stack:', e.stack);
-  document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;">Init Error: ' + e.message + '<br><br>' + e.stack + '</div>';
+  console.error('Init error:', e);
+  document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;">Init Error: ' + e.message + '</div>';
 }
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab)?.classList.add('active');
+  });
+});
+
+// Presets
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const presetName = btn.dataset.preset;
+    if (PRESETS[presetName]) {
+      currentSettings = mergePreset(PRESETS.default, PRESETS[presetName]);
+      applySettings(currentSettings);
+      updateUIFromSettings();
+    }
+  });
+});
+
+document.getElementById('save-preset')?.addEventListener('click', () => {
+  localStorage.setItem('customPreset', JSON.stringify(currentSettings));
+  alert('Preset saved!');
+});
+
+document.getElementById('load-preset')?.addEventListener('click', () => {
+  const saved = localStorage.getItem('customPreset');
+  if (saved) {
+    currentSettings = JSON.parse(saved);
+    applySettings(currentSettings);
+    updateUIFromSettings();
+  }
+});
+
+function applySettings(s) {
+  if (!visualizer) return;
+  visualizer.updateSettings(s);
+}
+
+function updateUIFromSettings() {
+  const s = currentSettings;
+  setValue('custom-text', s.text || 'NAKUL');
+  setValue('font-select', s.font || 'Bebas Neue');
+  setValue('text-anim', s.textAnim || 'pulse');
+  setValue('text-size', s.textSize);
+  setValue('text-opacity', s.textOpacity);
+  setValue('text-reactivity', s.textReactivity);
+  setValue('text-glow', s.textGlow);
+  setValue('text-color', s.textColor);
+  setChecked('text-outline', s.textOutline);
+  setValue('text-outline-color', s.textOutlineColor || '#000000');
+  setValue('color-primary', s.colorPrimary);
+  setValue('color-secondary', s.colorSecondary);
+  setValue('color-bg', s.colorBg);
+  setValue('saturation', s.saturation);
+  setValue('temperature', s.temperature);
+  setChecked('color-cycle', s.colorCycle);
+  setValue('cycle-speed', s.cycleSpeed);
+  setValue('bloom', s.bloom);
+  setValue('glitch', s.glitch);
+  setValue('chromatic', s.chromatic);
+  setValue('scanlines', s.scanlines);
+  setValue('noise', s.noise);
+  setValue('vignette', s.vignette);
+  setValue('shake', s.shake);
+  setChecked('beat-flash', s.beatFlash);
+  setChecked('invert', s.invert);
+  setChecked('motion-blur', s.motionBlur);
+  setValue('sensitivity', s.sensitivity);
+  setValue('anim-speed', s.animSpeed);
+  setValue('trail-length', s.trailLength);
+  setValue('particle-density', s.particleDensity);
+  setValue('zoom-pulse', s.zoomPulse);
+  setValue('scene-rotation', s.sceneRotation);
+  setChecked('mirror-x', s.mirrorX);
+  setChecked('mirror-y', s.mirrorY);
+}
+
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (el && val !== undefined) el.value = val;
+}
+
+function setChecked(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.checked = !!val;
+}
+
+// Bind all controls
+function bindControl(id, key, isCheckbox = false, isNumber = true) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener(isCheckbox ? 'change' : 'input', (e) => {
+    let val = isCheckbox ? e.target.checked : e.target.value;
+    if (isNumber && !isCheckbox) val = parseFloat(val);
+    currentSettings[key] = val;
+    applySettings({ [key]: val });
+  });
+}
+
+// Text
+bindControl('custom-text', 'text', false, false);
+bindControl('font-select', 'font', false, false);
+bindControl('text-anim', 'textAnim', false, false);
+bindControl('text-size', 'textSize');
+bindControl('text-opacity', 'textOpacity');
+bindControl('text-reactivity', 'textReactivity');
+bindControl('text-glow', 'textGlow');
+bindControl('text-color', 'textColor', false, false);
+bindControl('text-outline', 'textOutline', true);
+bindControl('text-outline-color', 'textOutlineColor', false, false);
+
+// Colors
+bindControl('color-primary', 'colorPrimary', false, false);
+bindControl('color-secondary', 'colorSecondary', false, false);
+bindControl('color-bg', 'colorBg', false, false);
+bindControl('saturation', 'saturation');
+bindControl('temperature', 'temperature');
+bindControl('color-cycle', 'colorCycle', true);
+bindControl('cycle-speed', 'cycleSpeed');
+
+// Effects
+bindControl('bloom', 'bloom');
+bindControl('glitch', 'glitch');
+bindControl('chromatic', 'chromatic');
+bindControl('scanlines', 'scanlines');
+bindControl('noise', 'noise');
+bindControl('vignette', 'vignette');
+bindControl('shake', 'shake');
+bindControl('beat-flash', 'beatFlash', true);
+bindControl('invert', 'invert', true);
+bindControl('motion-blur', 'motionBlur', true);
+
+// Visual
+bindControl('sensitivity', 'sensitivity');
+bindControl('anim-speed', 'animSpeed');
+bindControl('trail-length', 'trailLength');
+bindControl('particle-density', 'particleDensity');
+bindControl('zoom-pulse', 'zoomPulse');
+bindControl('scene-rotation', 'sceneRotation');
+bindControl('mirror-x', 'mirrorX', true);
+bindControl('mirror-y', 'mirrorY', true);
 
 window.addEventListener('modechange', (e) => {
   if (modeDisplay) {
@@ -49,15 +186,15 @@ window.addEventListener('modechange', (e) => {
 
 function showControls() {
   controls.classList.remove('hidden');
-  if (zoomHint) zoomHint.classList.remove('hidden');
+  zoomHint?.classList.remove('hidden');
   controlsVisible = true;
   clearTimeout(hideTimeout);
   if (isRunning) {
     hideTimeout = setTimeout(() => {
       controls.classList.add('hidden');
-      if (zoomHint) zoomHint.classList.add('hidden');
+      zoomHint?.classList.add('hidden');
       controlsVisible = false;
-    }, 4000);
+    }, 5000);
   }
 }
 
@@ -76,20 +213,14 @@ async function startWithSource(initFn) {
     isRunning = true;
     animate();
   } catch (error) {
-    console.error('Failed to start:', error);
-    hint.textContent = error.message || 'Failed to access audio source';
+    console.error('Failed:', error);
+    hint.textContent = error.message || 'Failed';
     hint.style.color = '#ff6b6b';
   }
 }
 
-systemAudioBtn.addEventListener('click', () => {
-  console.log('System audio clicked');
-  startWithSource(() => audio.initSystemAudio());
-});
-micBtn.addEventListener('click', () => {
-  console.log('Mic clicked');
-  startWithSource(() => audio.initMicrophone());
-});
+systemAudioBtn?.addEventListener('click', () => startWithSource(() => audio.initSystemAudio()));
+micBtn?.addEventListener('click', () => startWithSource(() => audio.initMicrophone()));
 
 function animate() {
   if (!isRunning || !visualizer) return;
@@ -104,35 +235,25 @@ function animate() {
   });
 }
 
-// Control handlers
-customTextInput?.addEventListener('input', (e) => visualizer.updateSettings({ text: e.target.value }));
-fontSelect?.addEventListener('change', (e) => visualizer.updateSettings({ font: e.target.value }));
-textSizeInput?.addEventListener('input', (e) => visualizer.updateSettings({ textSize: parseFloat(e.target.value) }));
-textOpacityInput?.addEventListener('input', (e) => visualizer.updateSettings({ textOpacity: parseFloat(e.target.value) }));
-textReactivityInput?.addEventListener('input', (e) => visualizer.updateSettings({ textReactivity: parseFloat(e.target.value) }));
-sensitivityInput?.addEventListener('input', (e) => visualizer.updateSettings({ sensitivity: parseFloat(e.target.value) }));
-bloomInput?.addEventListener('input', (e) => visualizer.updateSettings({ bloomIntensity: parseFloat(e.target.value) }));
-
 document.addEventListener('mousemove', showControls);
 document.addEventListener('touchstart', showControls);
 
-canvas.addEventListener('dblclick', () => {
+canvas?.addEventListener('dblclick', () => {
   document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   
-  if (e.key >= '1' && e.key <= '9') { visualizer.setMode(parseInt(e.key) - 1); return; }
-  if (e.key === '0') { visualizer.setMode(9); return; }
+  if (e.key >= '1' && e.key <= '9') { visualizer?.setMode(parseInt(e.key) - 1); return; }
+  if (e.key === '0') { visualizer?.setMode(9); return; }
   
   switch (e.key) {
     case 'f': document.documentElement.requestFullscreen(); break;
     case 'Escape': document.fullscreenElement && document.exitFullscreen(); break;
-    case ' ': audio?.audioElement && (audio.audioElement.paused ? audio.play() : audio.pause()); e.preventDefault(); break;
     case 'h': controlsVisible ? (controls.classList.add('hidden'), zoomHint?.classList.add('hidden'), controlsVisible = false) : showControls(); break;
-    case 'ArrowRight': visualizer.setMode((visualizer.currentModeIndex + 1) % 10); break;
-    case 'ArrowLeft': visualizer.setMode((visualizer.currentModeIndex + 9) % 10); break;
+    case 'ArrowRight': visualizer?.setMode((visualizer.currentModeIndex + 1) % 10); break;
+    case 'ArrowLeft': visualizer?.setMode((visualizer.currentModeIndex + 9) % 10); break;
   }
 });
 
@@ -147,4 +268,5 @@ function staticRender() {
 if (visualizer) {
   staticRender();
   visualizer.setMode(0);
+  applySettings(currentSettings);
 }

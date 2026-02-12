@@ -42,7 +42,9 @@ export class TextOverlay {
       outline: false,
       outlineColor: '#000000',
       shadow: true,
-      reactivity: 1
+      reactivity: 1,
+      glow: 0.5,
+      anim: 'pulse'
     };
     
     this.loadFonts();
@@ -226,17 +228,36 @@ export class TextOverlay {
     this.onBeat = onBeat;
     
     const reactivity = this.settings.reactivity || 1;
+    const anim = this.settings.anim || 'pulse';
     
-    // Scale reactivity
+    // Base scale
     let targetScale = this.settings.size || 1;
-    targetScale += bass * 0.3 * reactivity;
-    if (onBeat) targetScale += 0.15 * reactivity;
+    let shakeX = 0, shakeY = 0, rotation = 0;
+    
+    // Animation styles
+    switch (anim) {
+      case 'pulse':
+        targetScale += bass * 0.4 * reactivity;
+        if (onBeat) targetScale += 0.2 * reactivity;
+        break;
+      case 'bounce':
+        shakeY = Math.abs(Math.sin(this.time * 8)) * bass * reactivity * 0.1;
+        targetScale += bass * 0.1 * reactivity;
+        break;
+      case 'shake':
+        shakeX = (Math.random() - 0.5) * bass * reactivity * 0.15;
+        shakeY = (Math.random() - 0.5) * bass * reactivity * 0.15;
+        break;
+      case 'spin':
+        rotation = this.time * 2 + bass * Math.PI * reactivity;
+        targetScale += bass * 0.2 * reactivity;
+        break;
+      case 'none':
+        // Static
+        break;
+    }
     
     this.currentScale += (targetScale - this.currentScale) * 0.2;
-    
-    // Subtle shake on bass (not position-based)
-    const shakeX = (Math.random() - 0.5) * bass * 0.02 * reactivity;
-    const shakeY = (Math.random() - 0.5) * bass * 0.02 * reactivity;
     
     // Convert normalized position to world position
     const worldX = this.position.x * 4 + shakeX;
@@ -245,19 +266,18 @@ export class TextOverlay {
     this.mesh.position.x = worldX;
     this.mesh.position.y = worldY;
     this.mesh.scale.set(this.currentScale, this.currentScale, 1);
+    this.mesh.rotation.z = rotation;
     
-    // Subtle rotation
-    this.mesh.rotation.z = Math.sin(this.time * 2) * 0.02 * reactivity * bass;
-    
-    // Glow follows
+    // Glow
+    const glowAmount = this.settings.glow || 0.5;
     this.glowMesh.position.x = worldX;
     this.glowMesh.position.y = worldY;
-    this.glowMesh.scale.set(this.currentScale * 1.15, this.currentScale * 1.15, 1);
-    this.glowMesh.rotation.z = this.mesh.rotation.z;
+    this.glowMesh.scale.set(this.currentScale * (1 + glowAmount * 0.3), this.currentScale * (1 + glowAmount * 0.3), 1);
+    this.glowMesh.rotation.z = rotation;
     
     // Opacity
     this.material.opacity = (this.settings.opacity || 0.9) * (0.7 + intensity * 0.3);
-    this.glowMaterial.opacity = 0.1 + bass * 0.3;
+    this.glowMaterial.opacity = glowAmount * 0.3 + bass * glowAmount * 0.4;
   }
 
   dispose() {

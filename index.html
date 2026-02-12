@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>VISUALIZER</title>
+    <title>ASOUNDING</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <div id="app">
       <canvas id="visualizer"></canvas>
       <div id="mode-display" class="hidden">WAVEFORM</div>
-      <div id="zoom-hint">SCROLL ZOOM / 1-0 MODES / DRAG TEXT</div>
+      <div id="zoom-hint">SCROLL ZOOM / 1-0 MODES / DRAG TEXT / H HIDE</div>
       <div id="controls">
         <div id="source-buttons">
           <button id="system-audio" class="source-btn primary">SYSTEM AUDIO</button>
@@ -18,56 +18,128 @@
         </div>
         <p id="hint">Select Chrome tab with audio / Check "Share tab audio"</p>
         <div id="settings" class="autohide">
-          <div class="settings-section">
-            <div class="section-title">TEXT</div>
+          <!-- Tab buttons -->
+          <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="text">TEXT</button>
+            <button class="tab-btn" data-tab="colors">COLORS</button>
+            <button class="tab-btn" data-tab="effects">FX</button>
+            <button class="tab-btn" data-tab="visual">VISUAL</button>
+            <button class="tab-btn" data-tab="presets">PRESETS</button>
+          </div>
+          
+          <!-- TEXT TAB -->
+          <div class="tab-content active" id="tab-text">
             <div class="settings-row">
-              <label>
-                <input type="text" id="custom-text" value="NAKUL" maxlength="20" placeholder="Text" />
-              </label>
-              <label>
-                <select id="font-select">
-                  <option value="Bebas Neue">Bebas Neue</option>
-                  <option value="Montserrat">Montserrat</option>
-                  <option value="Oswald">Oswald</option>
-                  <option value="Rajdhani">Rajdhani</option>
-                  <option value="Orbitron">Orbitron</option>
-                  <option value="Press Start 2P">Pixel</option>
-                  <option value="Teko">Teko</option>
-                  <option value="Anton">Anton</option>
-                  <option value="Black Ops One">Black Ops</option>
-                  <option value="Righteous">Righteous</option>
-                </select>
-              </label>
+              <input type="text" id="custom-text" value="NAKUL" maxlength="20" placeholder="Text" />
+              <select id="font-select">
+                <option value="Bebas Neue">Bebas Neue</option>
+                <option value="Montserrat">Montserrat</option>
+                <option value="Oswald">Oswald</option>
+                <option value="Rajdhani">Rajdhani</option>
+                <option value="Orbitron">Orbitron</option>
+                <option value="Press Start 2P">Pixel</option>
+                <option value="Teko">Teko</option>
+                <option value="Anton">Anton</option>
+                <option value="Black Ops One">Black Ops</option>
+                <option value="Righteous">Righteous</option>
+              </select>
+              <select id="text-anim">
+                <option value="pulse">Pulse</option>
+                <option value="bounce">Bounce</option>
+                <option value="shake">Shake</option>
+                <option value="spin">Spin</option>
+                <option value="none">Static</option>
+              </select>
             </div>
             <div class="settings-row">
-              <label>
-                SIZE
-                <input type="range" id="text-size" min="0.3" max="2" step="0.1" value="1" />
-              </label>
-              <label>
-                OPACITY
-                <input type="range" id="text-opacity" min="0.1" max="1" step="0.1" value="0.9" />
-              </label>
-              <label>
-                REACT
-                <input type="range" id="text-reactivity" min="0" max="2" step="0.1" value="1" />
-              </label>
+              <label>SIZE <input type="range" id="text-size" min="0.2" max="3" step="0.1" value="1" /></label>
+              <label>OPACITY <input type="range" id="text-opacity" min="0" max="1" step="0.05" value="0.9" /></label>
+              <label>REACT <input type="range" id="text-reactivity" min="0" max="3" step="0.1" value="1" /></label>
+              <label>GLOW <input type="range" id="text-glow" min="0" max="2" step="0.1" value="0.5" /></label>
+            </div>
+            <div class="settings-row">
+              <label>COLOR <input type="color" id="text-color" value="#ffffff" /></label>
+              <label>OUTLINE <input type="checkbox" id="text-outline" /></label>
+              <label>OUTLINE COLOR <input type="color" id="text-outline-color" value="#000000" /></label>
             </div>
           </div>
-          <div class="settings-section">
-            <div class="section-title">EFFECTS</div>
+          
+          <!-- COLORS TAB -->
+          <div class="tab-content" id="tab-colors">
             <div class="settings-row">
-              <label>
-                SENSITIVITY
-                <input type="range" id="sensitivity" min="0.5" max="5" step="0.1" value="2" />
-              </label>
-              <label>
-                BLOOM
-                <input type="range" id="bloom" min="0" max="5" step="0.1" value="1.5" />
-              </label>
+              <label>PRIMARY <input type="color" id="color-primary" value="#ff0000" /></label>
+              <label>SECONDARY <input type="color" id="color-secondary" value="#00ffff" /></label>
+              <label>BACKGROUND <input type="color" id="color-bg" value="#000000" /></label>
+            </div>
+            <div class="settings-row">
+              <label>SATURATION <input type="range" id="saturation" min="0" max="2" step="0.1" value="1" /></label>
+              <label>TEMPERATURE <input type="range" id="temperature" min="-1" max="1" step="0.1" value="0" /></label>
+              <label>COLOR CYCLE <input type="checkbox" id="color-cycle" /></label>
+              <label>CYCLE SPEED <input type="range" id="cycle-speed" min="0.1" max="3" step="0.1" value="1" /></label>
             </div>
           </div>
-          <div class="settings-row mode-keys">
+          
+          <!-- EFFECTS TAB -->
+          <div class="tab-content" id="tab-effects">
+            <div class="settings-row">
+              <label>BLOOM <input type="range" id="bloom" min="0" max="5" step="0.1" value="1.5" /></label>
+              <label>GLITCH <input type="range" id="glitch" min="0" max="1" step="0.05" value="0" /></label>
+              <label>CHROMATIC <input type="range" id="chromatic" min="0" max="1" step="0.05" value="0.1" /></label>
+            </div>
+            <div class="settings-row">
+              <label>SCANLINES <input type="range" id="scanlines" min="0" max="2" step="0.1" value="0.5" /></label>
+              <label>NOISE <input type="range" id="noise" min="0" max="1" step="0.05" value="0.1" /></label>
+              <label>VIGNETTE <input type="range" id="vignette" min="0" max="1" step="0.05" value="0" /></label>
+            </div>
+            <div class="settings-row">
+              <label>SHAKE <input type="range" id="shake" min="0" max="2" step="0.1" value="1" /></label>
+              <label>BEAT FLASH <input type="checkbox" id="beat-flash" /></label>
+              <label>INVERT <input type="checkbox" id="invert" /></label>
+              <label>MOTION BLUR <input type="checkbox" id="motion-blur" /></label>
+            </div>
+          </div>
+          
+          <!-- VISUAL TAB -->
+          <div class="tab-content" id="tab-visual">
+            <div class="settings-row">
+              <label>SENSITIVITY <input type="range" id="sensitivity" min="0.5" max="5" step="0.1" value="2" /></label>
+              <label>SPEED <input type="range" id="anim-speed" min="0.2" max="3" step="0.1" value="1" /></label>
+              <label>TRAIL LENGTH <input type="range" id="trail-length" min="0" max="2" step="0.1" value="1" /></label>
+            </div>
+            <div class="settings-row">
+              <label>PARTICLES <input type="range" id="particle-density" min="0.2" max="3" step="0.1" value="1" /></label>
+              <label>ZOOM PULSE <input type="range" id="zoom-pulse" min="0" max="2" step="0.1" value="0.5" /></label>
+              <label>ROTATION <input type="range" id="scene-rotation" min="0" max="1" step="0.05" value="0" /></label>
+            </div>
+            <div class="settings-row">
+              <label>MIRROR X <input type="checkbox" id="mirror-x" /></label>
+              <label>MIRROR Y <input type="checkbox" id="mirror-y" /></label>
+            </div>
+          </div>
+          
+          <!-- PRESETS TAB -->
+          <div class="tab-content" id="tab-presets">
+            <div class="settings-row">
+              <button class="preset-btn" data-preset="default">DEFAULT</button>
+              <button class="preset-btn" data-preset="neon">NEON</button>
+              <button class="preset-btn" data-preset="retro">RETRO</button>
+              <button class="preset-btn" data-preset="minimal">MINIMAL</button>
+              <button class="preset-btn" data-preset="chaos">CHAOS</button>
+            </div>
+            <div class="settings-row">
+              <button class="preset-btn" data-preset="chill">CHILL</button>
+              <button class="preset-btn" data-preset="rave">RAVE</button>
+              <button class="preset-btn" data-preset="vaporwave">VAPOR</button>
+              <button class="preset-btn" data-preset="matrix">MATRIX</button>
+              <button class="preset-btn" data-preset="fire">FIRE</button>
+            </div>
+            <div class="settings-row">
+              <button id="save-preset" class="action-btn">SAVE CUSTOM</button>
+              <button id="load-preset" class="action-btn">LOAD CUSTOM</button>
+            </div>
+          </div>
+          
+          <div class="mode-keys">
             <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
             <span>6</span><span>7</span><span>8</span><span>9</span><span>0</span>
           </div>
