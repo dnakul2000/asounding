@@ -13,6 +13,7 @@ const modeDisplay = document.getElementById('mode-display');
 const sensitivityInput = document.getElementById('sensitivity');
 const bloomInput = document.getElementById('bloom');
 const customTextInput = document.getElementById('custom-text');
+const fontSelect = document.getElementById('font-select');
 
 let audio = null;
 let visualizer = null;
@@ -88,6 +89,7 @@ function animate() {
 sensitivityInput?.addEventListener('input', (e) => visualizer.updateSettings({ sensitivity: parseFloat(e.target.value) }));
 bloomInput?.addEventListener('input', (e) => visualizer.updateSettings({ bloomIntensity: parseFloat(e.target.value) }));
 customTextInput?.addEventListener('input', (e) => visualizer.updateSettings({ text: e.target.value }));
+fontSelect?.addEventListener('change', (e) => visualizer.updateSettings({ font: e.target.value }));
 
 document.addEventListener('mousemove', showControls);
 document.addEventListener('touchstart', showControls);

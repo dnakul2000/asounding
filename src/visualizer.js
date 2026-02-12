@@ -12,6 +12,7 @@ import { GridMode } from './modes/grid.js';
 import { RingsMode } from './modes/rings.js';
 import { StarfieldMode } from './modes/starfield.js';
 import { TextOverlay } from './text-overlay.js';
+import { SmartAudioAnalyzer } from './audio-analyzer.js';
 
 const MODE_CLASSES = [
   WaveformMode,   // 1
@@ -56,6 +57,7 @@ export class WaveformVisualizer {
       sensitivity: 2.0
     };
     
+    this.smartAnalyzer = new SmartAudioAnalyzer();
     this.init();
     this.setMode(0);
   }
@@ -160,18 +162,21 @@ export class WaveformVisualizer {
   update(audioData) {
     if (!this.mode) return;
     
+    // Run smart analysis
+    const smartData = this.smartAnalyzer.analyze(audioData);
+    
     // Apply sensitivity to audio data
     const sensitizedData = {
-      ...audioData,
+      ...smartData,
       sensitivity: this.settings.sensitivity
     };
     
     const result = this.mode.update(sensitizedData) || {};
     const { shake = 0, bloomBoost = 0, color = null } = result;
     
-    // Update text overlay
+    // Update text overlay with smart data
     const modeColor = color || MODE_COLORS[this.currentModeIndex];
-    this.textOverlay.update(audioData, modeColor);
+    this.textOverlay.update(smartData, modeColor);
     
     // Camera
     const targetZ = this.baseZoom / this.settings.zoom;
@@ -206,6 +211,11 @@ export class WaveformVisualizer {
     // Update text overlay
     if (newSettings.text !== undefined && this.textOverlay) {
       this.textOverlay.setText(newSettings.text);
+    }
+    
+    // Update font
+    if (newSettings.font !== undefined && this.textOverlay) {
+      this.textOverlay.setFont(newSettings.font);
     }
   }
 

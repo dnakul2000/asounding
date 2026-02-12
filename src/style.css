@@ -176,6 +176,26 @@ html, body {
   background: rgba(255,255,255,0.2);
 }
 
+#settings select {
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#settings select:focus {
+  outline: none;
+  border-color: #fff;
+}
+
+#settings select option {
+  background: #111;
+  color: #fff;
+}
+
 .mode-keys, .mode-names {
   gap: 8px !important;
 }
