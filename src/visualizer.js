@@ -139,7 +139,8 @@ export class WaveformVisualizer {
       this.mode.setSensitivity(this.settings.sensitivity);
     }
     
-    // Update text color for mode
+    // Update text for mode
+    this.textOverlay.setMode(index);
     this.textOverlay.setColor(MODE_COLORS[index]);
     
     // Show mode name briefly
