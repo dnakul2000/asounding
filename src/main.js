@@ -21,7 +21,13 @@ let isRunning = false;
 let hideTimeout = null;
 let controlsVisible = true;
 
-visualizer = new WaveformVisualizer(canvas);
+try {
+  visualizer = new WaveformVisualizer(canvas);
+  console.log('Visualizer initialized');
+} catch (e) {
+  console.error('Failed to init visualizer:', e);
+  alert('Visualizer init failed: ' + e.message);
+}
 
 window.addEventListener('modechange', (e) => {
   if (modeDisplay) {
@@ -70,8 +76,14 @@ async function startWithSource(initFn) {
   }
 }
 
-systemAudioBtn.addEventListener('click', () => startWithSource(() => audio.initSystemAudio()));
-micBtn.addEventListener('click', () => startWithSource(() => audio.initMicrophone()));
+systemAudioBtn.addEventListener('click', () => {
+  console.log('System audio clicked');
+  startWithSource(() => audio.initSystemAudio());
+});
+micBtn.addEventListener('click', () => {
+  console.log('Mic clicked');
+  startWithSource(() => audio.initMicrophone());
+});
 
 function animate() {
   if (!isRunning) return;
