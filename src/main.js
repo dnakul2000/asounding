@@ -28,9 +28,11 @@ let controlsVisible = true;
 
 try {
   visualizer = new WaveformVisualizer(canvas);
-  console.log('Visualizer initialized');
+  console.log('Visualizer initialized successfully');
 } catch (e) {
   console.error('Failed to init visualizer:', e);
+  console.error('Stack:', e.stack);
+  document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;">Init Error: ' + e.message + '<br><br>' + e.stack + '</div>';
 }
 
 window.addEventListener('modechange', (e) => {
@@ -90,7 +92,7 @@ micBtn.addEventListener('click', () => {
 });
 
 function animate() {
-  if (!isRunning) return;
+  if (!isRunning || !visualizer) return;
   requestAnimationFrame(animate);
   visualizer.update({
     waveform: audio.getWaveform(),
@@ -137,10 +139,12 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
 function staticRender() {
-  if (isRunning) return;
+  if (isRunning || !visualizer) return;
   requestAnimationFrame(staticRender);
   visualizer.update({ waveform: new Uint8Array(512).fill(128), frequencies: new Uint8Array(512).fill(0), volume: 0, bass: 0, mids: 0, highs: 0 });
 }
 
-staticRender();
-visualizer.setMode(0);
+if (visualizer) {
+  staticRender();
+  visualizer.setMode(0);
+}
