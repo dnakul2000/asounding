@@ -202,6 +202,11 @@ export class WaveformVisualizer {
     if (this.mode && this.mode.setSensitivity && newSettings.sensitivity !== undefined) {
       this.mode.setSensitivity(newSettings.sensitivity);
     }
+    
+    // Update text overlay
+    if (newSettings.text !== undefined && this.textOverlay) {
+      this.textOverlay.setText(newSettings.text);
+    }
   }
 
   onResize() {

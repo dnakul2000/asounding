@@ -156,6 +156,26 @@ html, body {
   accent-color: #fff;
 }
 
+#settings input[type="text"] {
+  width: 100px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+#settings input[type="text"]:focus {
+  outline: none;
+  border-color: #fff;
+  background: rgba(255,255,255,0.2);
+}
+
 .mode-keys, .mode-names {
   gap: 8px !important;
 }

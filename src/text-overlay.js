@@ -8,8 +8,14 @@ export class TextOverlay {
     this.baseColor = new THREE.Color(0xffffff);
     this.time = 0;
     this.modeIndex = 0;
+    this.text = 'NAKUL';
     
     this.createText();
+  }
+
+  setText(newText) {
+    this.text = newText || 'NAKUL';
+    this.updateTextColor();
   }
 
   createText() {
@@ -24,7 +30,7 @@ export class TextOverlay {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText('NAKUL', canvas.width / 2, canvas.height / 2);
+    ctx.fillText(this.text, canvas.width / 2, canvas.height / 2);
     
     this.texture = new THREE.CanvasTexture(canvas);
     this.texture.needsUpdate = true;
@@ -76,7 +82,7 @@ export class TextOverlay {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = `rgb(${Math.floor(this.baseColor.r * 255)}, ${Math.floor(this.baseColor.g * 255)}, ${Math.floor(this.baseColor.b * 255)})`;
-    ctx.fillText('NAKUL', canvas.width / 2, canvas.height / 2);
+    ctx.fillText(this.text, canvas.width / 2, canvas.height / 2);
     
     this.texture.needsUpdate = true;
   }
