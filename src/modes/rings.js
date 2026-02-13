@@ -43,8 +43,11 @@ export class RingsMode {
   }
 
   update(audioData) {
-    const { frequencies, bass, volume } = audioData;
+    const { frequencies, bass, volume, animSpeed = 1 } = audioData;
     if (!frequencies) return;
+    
+    // Animation speed affects rotation
+    const rotSpeed = animSpeed;
     
     const bandSize = Math.floor(frequencies.length / this.rings.length);
     this.rings.forEach((ring, i) => {
@@ -53,7 +56,7 @@ export class RingsMode {
       const bandValue = (sum / bandSize / 255) * this.sensitivity;
       const scale = 1 + bandValue * 1.5;
       ring.scale.set(scale, scale, 1);
-      ring.rotation.z += (0.005 + bandValue * 0.02) * (i % 2 === 0 ? 1 : -1);
+      ring.rotation.z += (0.005 + bandValue * 0.02) * (i % 2 === 0 ? 1 : -1) * rotSpeed;
       const hue = i / this.rings.length * 0.7;
       ring.material.color.setHSL(hue, 1, 0.4 + bandValue * 0.3);
       ring.material.opacity = 0.4 + bandValue * 0.5;

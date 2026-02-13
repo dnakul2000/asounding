@@ -63,10 +63,11 @@ export class SpiralMode {
   }
 
   update(audioData) {
-    const { waveform, bass, volume } = audioData;
+    const { waveform, bass, volume, animSpeed = 1 } = audioData;
     if (!waveform) return;
     
-    this.time += 0.02 + bass * 0.05;
+    // Animation speed affects spiral rotation
+    this.time += (0.02 + bass * 0.05) * animSpeed;
     const positions = this.spiral.geometry.attributes.position.array;
     const colors = this.spiral.geometry.attributes.color.array;
     const segments = positions.length / 3;

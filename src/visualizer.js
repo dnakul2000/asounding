@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EffectComposer, RenderPass, BloomEffect, EffectPass, ChromaticAberrationEffect, ScanlineEffect, NoiseEffect, VignetteEffect } from 'postprocessing';
+import { EffectComposer, RenderPass, BloomEffect, EffectPass, ChromaticAberrationEffect, ScanlineEffect, NoiseEffect, VignetteEffect, GlitchEffect, ShaderPass } from 'postprocessing';
 
 import { WaveformMode } from './modes/waveform.js';
 import { CircularMode } from './modes/circular.js';
@@ -90,9 +90,25 @@ export class WaveformVisualizer {
     this.noiseEffect = new NoiseEffect({ premultiply: true });
     this.noiseEffect.blendMode.opacity.value = 0.1;
     this.vignetteEffect = new VignetteEffect({ darkness: 0.5, offset: 0.3 });
-
+    
+    // Glitch effect
+    this.glitchEffect = new GlitchEffect({
+      chromaticAberrationOffset: new THREE.Vector2(0.002, 0.002),
+      delay: new THREE.Vector2(1.5, 3.5),
+      duration: new THREE.Vector2(0.1, 0.3),
+      strength: new THREE.Vector2(0.1, 0.5),
+      perturbationMap: null,
+      dtSize: 64
+    });
+    this.glitchEffect.mode = 0; // 0 = sporadic, 1 = constant
+    
     this.composer.addPass(new EffectPass(this.camera, this.bloomEffect, this.chromaticEffect));
+    this.composer.addPass(new EffectPass(this.camera, this.glitchEffect));
     this.composer.addPass(new EffectPass(this.camera, this.scanlineEffect, this.noiseEffect, this.vignetteEffect));
+    
+    // Motion blur using previous frame blend (simple approach)
+    this.motionBlurEnabled = false;
+    this.prevFrameTexture = null;
   }
 
   updateBackgroundColor() {
@@ -266,8 +282,14 @@ export class WaveformVisualizer {
       this.settings.colorPrimary = '#' + color.getHexString();
     }
     
-    // Mode update
-    const modeData = { ...smartData, sensitivity: this.settings.sensitivity, animSpeed: this.settings.animSpeed };
+    // Mode update with all settings passed
+    const modeData = { 
+      ...smartData, 
+      sensitivity: this.settings.sensitivity, 
+      animSpeed: this.settings.animSpeed,
+      particleDensity: this.settings.particleDensity,
+      trailLength: this.settings.trailLength
+    };
     const result = this.mode.update(modeData) || {};
     
     // Text overlay
@@ -310,6 +332,43 @@ export class WaveformVisualizer {
     this.noiseEffect.blendMode.opacity.value = this.settings.noise;
     this.vignetteEffect.darkness = this.settings.vignette;
     
+    // Glitch effect - controlled by setting
+    if (this.glitchEffect) {
+      // Glitch amount controls both activity and strength
+      const glitchAmount = this.settings.glitch;
+      if (glitchAmount > 0) {
+        this.glitchEffect.mode = glitchAmount > 0.5 ? 1 : 0; // Constant vs sporadic
+        // Scale delay inversely with glitch amount (more glitch = less delay)
+        const minDelay = Math.max(0.1, 2 - glitchAmount * 2);
+        const maxDelay = Math.max(0.5, 4 - glitchAmount * 3);
+        this.glitchEffect.delay.set(minDelay, maxDelay);
+        this.glitchEffect.duration.set(0.05 + glitchAmount * 0.2, 0.1 + glitchAmount * 0.4);
+        // Beat reactive glitch boost
+        if (onBeat && bass > 0.5) {
+          this.glitchEffect.mode = 1; // Force constant during beat
+        }
+      } else {
+        this.glitchEffect.mode = 0;
+        this.glitchEffect.delay.set(999, 999); // Effectively disable
+      }
+    }
+    
+    // Invert effect - apply via CSS filter on canvas for simplicity
+    if (this.canvas) {
+      this.canvas.style.filter = this.settings.invert ? 'invert(1)' : '';
+    }
+    
+    // Motion blur effect - apply via CSS for simplicity
+    if (this.canvas && this.motionBlurEnabled !== this.settings.motionBlur) {
+      this.motionBlurEnabled = this.settings.motionBlur;
+      // Motion blur uses a subtle blur + reduced opacity trick
+      if (this.settings.motionBlur) {
+        this.renderer.domElement.style.opacity = '0.92';
+      } else {
+        this.renderer.domElement.style.opacity = '1';
+      }
+    }
+    
     // Mirror
     this.scene.scale.x = this.settings.mirrorX ? -1 : 1;
     this.scene.scale.y = this.settings.mirrorY ? -1 : 1;
@@ -318,6 +377,11 @@ export class WaveformVisualizer {
   }
 
   updateSettings(newSettings) {
+    // Map bloom to bloomIntensity for consistency
+    if (newSettings.bloom !== undefined) {
+      newSettings.bloomIntensity = newSettings.bloom;
+    }
+    
     Object.assign(this.settings, newSettings);
     
     if (this.mode?.setSensitivity && newSettings.sensitivity !== undefined) {
@@ -328,8 +392,8 @@ export class WaveformVisualizer {
       this.updateBackgroundColor();
     }
     
-    if (newSettings.bloomIntensity !== undefined) {
-      this.bloomEffect.intensity = newSettings.bloomIntensity;
+    if (newSettings.bloomIntensity !== undefined || newSettings.bloom !== undefined) {
+      this.bloomEffect.intensity = this.settings.bloomIntensity;
     }
     
     // Text settings

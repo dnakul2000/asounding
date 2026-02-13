@@ -37,11 +37,12 @@ export class TunnelMode {
   }
 
   update(audioData) {
-    const { waveform, bass, volume, mids } = audioData;
+    const { waveform, bass, volume, mids, animSpeed = 1 } = audioData;
     if (!waveform) return;
     
-    this.time += 0.1 + bass * 0.3;
-    const speed = 0.2 + bass * 0.5 * this.sensitivity;
+    // Animation speed affects tunnel movement
+    this.time += (0.1 + bass * 0.3) * animSpeed;
+    const speed = (0.2 + bass * 0.5 * this.sensitivity) * animSpeed;
     
     this.rings.forEach((ring, i) => {
       ring.position.z += speed;

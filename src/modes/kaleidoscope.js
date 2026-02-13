@@ -157,9 +157,10 @@ export class KaleidoscopeMode {
   }
 
   update(audioData) {
-    const { bass, volume, mids, highs, beatPhase = 0, onBeat, kickDetected, snareDetected } = audioData;
+    const { bass, volume, mids, highs, beatPhase = 0, onBeat, kickDetected, snareDetected, animSpeed = 1 } = audioData;
     
-    this.time += 0.016 * (1 + bass * 0.5);
+    // Animation speed affects time and all rotations
+    this.time += 0.016 * (1 + bass * 0.5) * animSpeed;
     
     // Rotate entire kaleidoscope
     const rotationSpeed = 0.005 + mids * 0.02;

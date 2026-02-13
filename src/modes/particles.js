@@ -89,12 +89,19 @@ export class ParticlesMode {
   }
 
   update(audioData) {
-    const { bass, volume, mids, highs } = audioData;
+    const { bass, volume, mids, highs, animSpeed = 1, particleDensity = 1 } = audioData;
     const positions = this.particles.geometry.attributes.position.array;
     const colors = this.particles.geometry.attributes.color.array;
     const count = this.count;
     
-    this.time += 0.016;
+    // Animation speed affects time progression
+    this.time += 0.016 * animSpeed;
+    
+    // Particle density affects how many particles are visible/active
+    const activeCount = Math.floor(count * Math.min(1, particleDensity));
+    
+    // Scale particle size with density (smaller = more dense looking)
+    const densityScale = 0.5 + particleDensity * 0.5;
     
     // Shift trail positions (each layer gets the previous layer's positions)
     for (let t = this.trailLayers.length - 1; t > 0; t--) {
@@ -156,7 +163,7 @@ export class ParticlesMode {
     
     this.particles.geometry.attributes.position.needsUpdate = true;
     this.particles.geometry.attributes.color.needsUpdate = true;
-    this.particles.material.size = 0.05 + bass * 0.15;
+    this.particles.material.size = (0.05 + bass * 0.15) * densityScale;
     
     const coreScale = 0.2 + bass * 1.5;
     this.core.scale.set(coreScale, coreScale, coreScale);

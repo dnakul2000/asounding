@@ -104,10 +104,11 @@ export class BarsMode {
   }
 
   update(audioData) {
-    const { frequencies, bass, volume, mids } = audioData;
+    const { frequencies, bass, volume, mids, animSpeed = 1 } = audioData;
     if (!frequencies) return;
     
-    this.time += 0.016;
+    // Animation speed affects time and particle movement
+    this.time += 0.016 * animSpeed;
     const step = Math.floor(frequencies.length / this.barCount);
     
     const glowPositions = this.glowPoints.geometry.attributes.position.array;

@@ -44,7 +44,7 @@ function hidePanel() {
 
 function scheduleHidePanel() {
   clearTimeout(panelTimeout);
-  panelTimeout = setTimeout(hidePanel, 2000);
+  panelTimeout = setTimeout(hidePanel, 5000);
 }
 
 panelTrigger.addEventListener('mouseenter', showPanel);
@@ -254,15 +254,41 @@ function setChecked(id, val) {
   if (el) el.checked = !!val;
 }
 
-// Bind all controls
+// Bind all controls with optional value label updates
 function bindControl(id, key, isCheckbox = false, isNumber = true) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.addEventListener(isCheckbox ? 'change' : 'input', (e) => {
+  
+  // Find or create value label for range inputs
+  const valueLabel = document.getElementById(id + '-value');
+  
+  const updateHandler = (e) => {
     let val = isCheckbox ? e.target.checked : e.target.value;
     if (isNumber && !isCheckbox) val = parseFloat(val);
     currentSettings[key] = val;
     applySettings({ [key]: val });
+    
+    // Update value label if it exists
+    if (valueLabel && !isCheckbox) {
+      valueLabel.textContent = typeof val === 'number' ? val.toFixed(1) : val;
+    }
+  };
+  
+  el.addEventListener(isCheckbox ? 'change' : 'input', updateHandler);
+  
+  // Initialize value label
+  if (valueLabel && el.type === 'range') {
+    valueLabel.textContent = parseFloat(el.value).toFixed(1);
+  }
+}
+
+// Initialize all slider value labels on load
+function initSliderLabels() {
+  document.querySelectorAll('input[type="range"]').forEach(slider => {
+    const valueLabel = document.getElementById(slider.id + '-value');
+    if (valueLabel) {
+      valueLabel.textContent = parseFloat(slider.value).toFixed(1);
+    }
   });
 }
 
@@ -319,6 +345,49 @@ bindControl('bass-react', 'bassReact');
 bindControl('mids-react', 'midsReact');
 bindControl('highs-react', 'highsReact');
 bindControl('beat-pulse', 'beatPulse', true);
+
+// Section defaults for reset buttons
+const SECTION_DEFAULTS = {
+  audio: {
+    sensitivity: 2, bassReact: 1, midsReact: 1, highsReact: 1, beatPulse: true
+  },
+  visual: {
+    animSpeed: 1, trailLength: 1, particleDensity: 1, zoomPulse: 0.5,
+    sceneRotation: 0, mirrorX: false, mirrorY: false
+  },
+  colors: {
+    colorPrimary: '#ff0000', colorSecondary: '#00ffff', colorBg: '#000000',
+    saturation: 1, temperature: 0, colorCycle: false, cycleSpeed: 1
+  },
+  effects: {
+    bloom: 1.5, glitch: 0, chromatic: 0.1, scanlines: 0.5, noise: 0.1,
+    vignette: 0, shake: 1, beatFlash: false, invert: false, motionBlur: false
+  },
+  text: {
+    text: 'NAKUL', font: 'Bebas Neue', textAnim: 'pulse', textSize: 1,
+    textOpacity: 0.9, textReactivity: 1, textGlow: 0.5, textColor: '#ffffff',
+    textOutline: false, textOutlineColor: '#000000'
+  }
+};
+
+// Reset a specific section to defaults
+function resetSection(sectionName) {
+  const defaults = SECTION_DEFAULTS[sectionName];
+  if (!defaults) return;
+  
+  Object.assign(currentSettings, defaults);
+  applySettings(defaults);
+  updateUIFromSettings();
+}
+
+// Bind section reset buttons
+document.querySelectorAll('.section-reset-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent accordion toggle
+    const section = btn.dataset.section;
+    resetSection(section);
+  });
+});
 
 // Audio source handlers
 async function startWithSource(initFn) {
@@ -409,4 +478,5 @@ if (visualizer) {
   visualizer.setMode(0);
   applySettings(currentSettings);
   updateUIFromSettings();
+  initSliderLabels();
 }

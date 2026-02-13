@@ -46,8 +46,11 @@ export class CircularMode {
   }
 
   update(audioData) {
-    const { waveform, bass, volume, mids } = audioData;
+    const { waveform, bass, volume, mids, animSpeed = 1 } = audioData;
     if (!waveform) return;
+    
+    // Animation speed affects ring rotation
+    const rotSpeed = animSpeed;
     
     this.rings.forEach((ring, rIdx) => {
       const positions = ring.geometry.attributes.position.array;
@@ -73,7 +76,7 @@ export class CircularMode {
       
       ring.geometry.attributes.position.needsUpdate = true;
       ring.geometry.attributes.color.needsUpdate = true;
-      ring.rotation.z += 0.01 * (rIdx % 2 === 0 ? 1 : -1) + bass * 0.05;
+      ring.rotation.z += (0.01 * (rIdx % 2 === 0 ? 1 : -1) + bass * 0.05) * rotSpeed;
     });
     
     const scale = 0.5 + bass * 2;

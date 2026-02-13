@@ -44,8 +44,11 @@ export class SphereMode {
   }
 
   update(audioData) {
-    const { frequencies, bass, volume, mids } = audioData;
+    const { frequencies, bass, volume, mids, animSpeed = 1 } = audioData;
     if (!frequencies) return;
+    
+    // Animation speed affects rotation
+    const rotSpeed = animSpeed;
     
     const positions = this.sphere.geometry.attributes.position.array;
     const vertCount = positions.length / 3;
@@ -58,8 +61,8 @@ export class SphereMode {
       positions[i * 3 + 2] = this.originalPositions[i * 3 + 2] * deform;
     }
     this.sphere.geometry.attributes.position.needsUpdate = true;
-    this.sphere.rotation.x += 0.005 + mids * 0.02;
-    this.sphere.rotation.y += 0.01 + bass * 0.03;
+    this.sphere.rotation.x += (0.005 + mids * 0.02) * rotSpeed;
+    this.sphere.rotation.y += (0.01 + bass * 0.03) * rotSpeed;
     
     this.innerSphere.rotation.x -= 0.007;
     this.innerSphere.rotation.y -= 0.012;

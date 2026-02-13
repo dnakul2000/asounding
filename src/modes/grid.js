@@ -68,10 +68,11 @@ export class GridMode {
   }
 
   update(audioData) {
-    const { frequencies, bass, volume } = audioData;
+    const { frequencies, bass, volume, animSpeed = 1 } = audioData;
     if (!frequencies) return;
     
-    this.time += 0.05 + bass * 0.1;
+    // Animation speed affects wave progression
+    this.time += (0.05 + bass * 0.1) * animSpeed;
     const positions = this.terrain.geometry.attributes.position.array;
     const vertCount = positions.length / 3;
     const gridSize = Math.sqrt(vertCount);

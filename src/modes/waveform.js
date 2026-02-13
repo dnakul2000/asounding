@@ -72,14 +72,20 @@ export class WaveformMode {
   }
 
   update(audioData) {
-    const { waveform, bass, volume } = audioData;
+    const { waveform, bass, volume, animSpeed = 1, trailLength = 1 } = audioData;
     if (!waveform) return;
+    
+    // Trail length affects opacity and how many trails are visible
+    const trailOpacityScale = trailLength;
     
     for (let t = this.trails.length - 1; t >= 2; t--) {
       const curr = this.trails[t].geometry.attributes.position.array;
       const prev = this.trails[t - 2].geometry.attributes.position.array;
       for (let i = 0; i < curr.length; i++) curr[i] = prev[i];
       this.trails[t].geometry.attributes.position.needsUpdate = true;
+      // Adjust trail opacity based on trailLength setting
+      const baseOpacity = (1 - (t/2) / (this.trails.length/2)) * 0.3;
+      this.trails[t].material.opacity = baseOpacity * trailOpacityScale;
     }
     
     [this.mainWave, this.mirrorWave].forEach(wave => {

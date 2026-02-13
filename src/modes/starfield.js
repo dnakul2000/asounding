@@ -62,8 +62,11 @@ export class StarfieldMode {
   }
 
   update(audioData) {
-    const { bass, volume, mids } = audioData;
-    const speedMultiplier = (1 + bass * 5) * this.sensitivity * 0.5;
+    const { bass, volume, mids, animSpeed = 1, particleDensity = 1 } = audioData;
+    // Animation speed affects star movement
+    const speedMultiplier = (1 + bass * 5) * this.sensitivity * 0.5 * animSpeed;
+    // Particle density affects star size and brightness
+    const densityScale = 0.5 + particleDensity * 0.5;
     
     const positions = this.stars.geometry.attributes.position.array;
     const colors = this.stars.geometry.attributes.color.array;
@@ -83,7 +86,7 @@ export class StarfieldMode {
     
     this.stars.geometry.attributes.position.needsUpdate = true;
     this.stars.geometry.attributes.color.needsUpdate = true;
-    this.stars.material.size = 0.08 + bass * 0.15;
+    this.stars.material.size = (0.08 + bass * 0.15) * densityScale;
     
     this.nebulae.forEach((nebula, i) => {
       nebula.position.z += 0.05 * speedMultiplier;

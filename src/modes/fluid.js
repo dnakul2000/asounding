@@ -194,9 +194,13 @@ export class FluidMode {
   }
 
   update(audioData) {
-    const { bass, volume, mids, highs, onBeat, kickDetected, snareDetected, beatPhase = 0 } = audioData;
+    const { bass, volume, mids, highs, onBeat, kickDetected, snareDetected, beatPhase = 0, animSpeed = 1, particleDensity = 1 } = audioData;
     
-    this.time += 0.016;
+    // Animation speed affects time
+    this.time += 0.016 * animSpeed;
+    
+    // Particle density affects flow speed and spawn rate
+    const densityMultiplier = 0.5 + particleDensity * 0.5;
     
     const positions = this.positions;
     const velocities = this.velocities;
@@ -255,8 +259,8 @@ export class FluidMode {
     
     this.particles.geometry.attributes.position.needsUpdate = true;
     this.particles.geometry.attributes.color.needsUpdate = true;
-    this.particles.material.size = 0.06 + bass * 0.08;
-    this.particles.material.opacity = 0.5 + volume * 0.4;
+    this.particles.material.size = (0.06 + bass * 0.08) * densityMultiplier;
+    this.particles.material.opacity = (0.5 + volume * 0.4) * densityMultiplier;
     
     // Update trail particles
     const trailPos = this.trailPositions;
