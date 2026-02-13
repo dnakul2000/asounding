@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/asounding/assets/index-BNnF_B4K.js"></script>
-    <link rel="stylesheet" crossorigin href="/asounding/assets/index-DjoSI5kg.css">
+    <script type="module" crossorigin src="/asounding/assets/index-BDNhoYLb.js"></script>
+    <link rel="stylesheet" crossorigin href="/asounding/assets/index-CH2Svw0L.css">
   </head>
   <body>
     <div id="app">
@@ -130,24 +130,39 @@
           <div class="accordion-item">
             <button class="accordion-header">
               <span>Audio</span>
-              <span class="accordion-icon">›</span>
+              <span class="header-actions">
+                <button class="section-reset-btn" data-section="audio" title="Reset Audio">↺</button>
+                <span class="accordion-icon">›</span>
+              </span>
             </button>
             <div class="accordion-content">
               <div class="control-row">
                 <label>Sensitivity</label>
-                <input type="range" id="sensitivity" min="0.5" max="5" step="0.1" value="2" />
+                <div class="slider-with-value">
+                  <input type="range" id="sensitivity" min="0.5" max="5" step="0.1" value="2" />
+                  <span class="slider-value" id="sensitivity-value">2.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Bass React</label>
-                <input type="range" id="bass-react" min="0" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="bass-react" min="0" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="bass-react-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Mids React</label>
-                <input type="range" id="mids-react" min="0" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="mids-react" min="0" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="mids-react-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Highs React</label>
-                <input type="range" id="highs-react" min="0" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="highs-react" min="0" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="highs-react-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Beat Pulse</label>
@@ -160,28 +175,46 @@
           <div class="accordion-item">
             <button class="accordion-header">
               <span>Visual</span>
-              <span class="accordion-icon">›</span>
+              <span class="header-actions">
+                <button class="section-reset-btn" data-section="visual" title="Reset Visual">↺</button>
+                <span class="accordion-icon">›</span>
+              </span>
             </button>
             <div class="accordion-content">
               <div class="control-row">
                 <label>Speed</label>
-                <input type="range" id="anim-speed" min="0.2" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="anim-speed" min="0.2" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="anim-speed-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Trail</label>
-                <input type="range" id="trail-length" min="0" max="2" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="trail-length" min="0" max="2" step="0.1" value="1" />
+                  <span class="slider-value" id="trail-length-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Particles</label>
-                <input type="range" id="particle-density" min="0.2" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="particle-density" min="0.2" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="particle-density-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Zoom Pulse</label>
-                <input type="range" id="zoom-pulse" min="0" max="2" step="0.1" value="0.5" />
+                <div class="slider-with-value">
+                  <input type="range" id="zoom-pulse" min="0" max="2" step="0.1" value="0.5" />
+                  <span class="slider-value" id="zoom-pulse-value">0.5</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Rotation</label>
-                <input type="range" id="scene-rotation" min="0" max="1" step="0.05" value="0" />
+                <div class="slider-with-value">
+                  <input type="range" id="scene-rotation" min="0" max="1" step="0.05" value="0" />
+                  <span class="slider-value" id="scene-rotation-value">0.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Mirror X</label>
@@ -198,7 +231,10 @@
           <div class="accordion-item">
             <button class="accordion-header">
               <span>Colors</span>
-              <span class="accordion-icon">›</span>
+              <span class="header-actions">
+                <button class="section-reset-btn" data-section="colors" title="Reset Colors">↺</button>
+                <span class="accordion-icon">›</span>
+              </span>
             </button>
             <div class="accordion-content">
               <div class="control-row">
@@ -215,11 +251,17 @@
               </div>
               <div class="control-row">
                 <label>Saturation</label>
-                <input type="range" id="saturation" min="0" max="2" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="saturation" min="0" max="2" step="0.1" value="1" />
+                  <span class="slider-value" id="saturation-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Temperature</label>
-                <input type="range" id="temperature" min="-1" max="1" step="0.1" value="0" />
+                <div class="slider-with-value">
+                  <input type="range" id="temperature" min="-1" max="1" step="0.1" value="0" />
+                  <span class="slider-value" id="temperature-value">0.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Color Cycle</label>
@@ -227,7 +269,10 @@
               </div>
               <div class="control-row">
                 <label>Cycle Speed</label>
-                <input type="range" id="cycle-speed" min="0.1" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="cycle-speed" min="0.1" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="cycle-speed-value">1.0</span>
+                </div>
               </div>
             </div>
           </div>
@@ -236,36 +281,60 @@
           <div class="accordion-item">
             <button class="accordion-header">
               <span>Effects</span>
-              <span class="accordion-icon">›</span>
+              <span class="header-actions">
+                <button class="section-reset-btn" data-section="effects" title="Reset Effects">↺</button>
+                <span class="accordion-icon">›</span>
+              </span>
             </button>
             <div class="accordion-content">
               <div class="control-row">
                 <label>Bloom</label>
-                <input type="range" id="bloom" min="0" max="5" step="0.1" value="1.5" />
+                <div class="slider-with-value">
+                  <input type="range" id="bloom" min="0" max="5" step="0.1" value="1.5" />
+                  <span class="slider-value" id="bloom-value">1.5</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Glitch</label>
-                <input type="range" id="glitch" min="0" max="1" step="0.05" value="0" />
+                <div class="slider-with-value">
+                  <input type="range" id="glitch" min="0" max="1" step="0.05" value="0" />
+                  <span class="slider-value" id="glitch-value">0.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Chromatic</label>
-                <input type="range" id="chromatic" min="0" max="1" step="0.05" value="0.1" />
+                <div class="slider-with-value">
+                  <input type="range" id="chromatic" min="0" max="1" step="0.05" value="0.1" />
+                  <span class="slider-value" id="chromatic-value">0.1</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Scanlines</label>
-                <input type="range" id="scanlines" min="0" max="2" step="0.1" value="0.5" />
+                <div class="slider-with-value">
+                  <input type="range" id="scanlines" min="0" max="2" step="0.1" value="0.5" />
+                  <span class="slider-value" id="scanlines-value">0.5</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Noise</label>
-                <input type="range" id="noise" min="0" max="1" step="0.05" value="0.1" />
+                <div class="slider-with-value">
+                  <input type="range" id="noise" min="0" max="1" step="0.05" value="0.1" />
+                  <span class="slider-value" id="noise-value">0.1</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Vignette</label>
-                <input type="range" id="vignette" min="0" max="1" step="0.05" value="0" />
+                <div class="slider-with-value">
+                  <input type="range" id="vignette" min="0" max="1" step="0.05" value="0" />
+                  <span class="slider-value" id="vignette-value">0.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Shake</label>
-                <input type="range" id="shake" min="0" max="2" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="shake" min="0" max="2" step="0.1" value="1" />
+                  <span class="slider-value" id="shake-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Beat Flash</label>
@@ -286,7 +355,10 @@
           <div class="accordion-item">
             <button class="accordion-header">
               <span>Text</span>
-              <span class="accordion-icon">›</span>
+              <span class="header-actions">
+                <button class="section-reset-btn" data-section="text" title="Reset Text">↺</button>
+                <span class="accordion-icon">›</span>
+              </span>
             </button>
             <div class="accordion-content">
               <div class="control-row">
@@ -320,19 +392,31 @@
               </div>
               <div class="control-row">
                 <label>Size</label>
-                <input type="range" id="text-size" min="0.2" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="text-size" min="0.2" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="text-size-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Opacity</label>
-                <input type="range" id="text-opacity" min="0" max="1" step="0.05" value="0.9" />
+                <div class="slider-with-value">
+                  <input type="range" id="text-opacity" min="0" max="1" step="0.05" value="0.9" />
+                  <span class="slider-value" id="text-opacity-value">0.9</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Reactivity</label>
-                <input type="range" id="text-reactivity" min="0" max="3" step="0.1" value="1" />
+                <div class="slider-with-value">
+                  <input type="range" id="text-reactivity" min="0" max="3" step="0.1" value="1" />
+                  <span class="slider-value" id="text-reactivity-value">1.0</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Glow</label>
-                <input type="range" id="text-glow" min="0" max="2" step="0.1" value="0.5" />
+                <div class="slider-with-value">
+                  <input type="range" id="text-glow" min="0" max="2" step="0.1" value="0.5" />
+                  <span class="slider-value" id="text-glow-value">0.5</span>
+                </div>
               </div>
               <div class="control-row">
                 <label>Color</label>
