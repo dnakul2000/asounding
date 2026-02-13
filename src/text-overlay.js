@@ -31,14 +31,14 @@ export class TextOverlay {
     this.onBeat = false;
     
     // Position (normalized -1 to 1)
-    // Start at lower-left rule-of-thirds position (golden triangle)
-    this.position = { x: -0.12, y: -0.12 };
+    // Start at top-right corner
+    this.position = { x: 0.65, y: 0.7 };
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     
     // Settings
     this.settings = {
-      size: 1,
+      size: 0.5,
       opacity: 0.9,
       outline: false,
       outlineColor: '#000000',

@@ -1,6 +1,6 @@
 export const PRESETS = {
   default: {
-    textSize: 1, textOpacity: 0.9, textReactivity: 1, textGlow: 0.5,
+    textSize: 0.5, textOpacity: 0.9, textReactivity: 1, textGlow: 0.5,
     textColor: '#ffffff', textOutline: false, textOutlineColor: '#000000',
     colorPrimary: '#ff0000', colorSecondary: '#00ffff', colorBg: '#000000',
     saturation: 1, temperature: 0, colorCycle: false, cycleSpeed: 1,
