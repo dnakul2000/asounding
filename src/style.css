@@ -107,10 +107,30 @@ html, body {
   font-weight: 300;
   letter-spacing: 20px;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+}
+
+.title-animated {
+  background: linear-gradient(
+    90deg,
+    #fff 0%,
+    #ff0080 20%,
+    #00ffff 40%,
+    #ff0080 60%,
+    #fff 80%,
+    #00ffff 100%
+  );
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: shimmer 3s ease-in-out infinite;
+  text-shadow: 0 0 80px rgba(255, 0, 128, 0.3);
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
 }
 
 .tagline {
@@ -118,6 +138,13 @@ html, body {
   font-size: 14px;
   letter-spacing: 4px;
   text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.credit {
+  color: var(--text-dimmer);
+  font-size: 12px;
+  letter-spacing: 2px;
   margin-bottom: 48px;
 }
 
