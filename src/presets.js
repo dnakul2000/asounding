@@ -1,14 +1,16 @@
 export const PRESETS = {
   default: {
     textSize: 1, textOpacity: 0.9, textReactivity: 1, textGlow: 0.5,
-    textColor: '#ffffff', textOutline: false,
+    textColor: '#ffffff', textOutline: false, textOutlineColor: '#000000',
     colorPrimary: '#ff0000', colorSecondary: '#00ffff', colorBg: '#000000',
     saturation: 1, temperature: 0, colorCycle: false, cycleSpeed: 1,
     bloom: 1.5, glitch: 0, chromatic: 0.1, scanlines: 0.5, noise: 0.1,
     vignette: 0, shake: 1, beatFlash: false, invert: false, motionBlur: false,
     sensitivity: 2, animSpeed: 1, trailLength: 1, particleDensity: 1,
     zoomPulse: 0.5, sceneRotation: 0, mirrorX: false, mirrorY: false,
-    autoCycle: true, autoCycleBeats: 16, autoCycleMode: 'smart'
+    autoCycle: true, autoCycleBeats: 16, autoCycleMode: 'smart',
+    // Audio reactivity
+    bassReact: 1, midsReact: 1, highsReact: 1, beatPulse: true
   },
   neon: {
     textColor: '#00ffff', colorPrimary: '#ff00ff', colorSecondary: '#00ffff',

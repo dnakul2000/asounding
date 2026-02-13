@@ -5,177 +5,406 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ASOUNDING</title>
     <link rel="stylesheet" href="/src/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="app">
       <canvas id="visualizer"></canvas>
       <div id="morph-overlay"></div>
       <div id="mode-display" class="hidden">WAVEFORM</div>
-      <div id="zoom-hint">SCROLL ZOOM / 1-0,K,L MODES / DRAG TEXT / H HIDE / ← → CYCLE / F FULLSCREEN</div>
-      <div id="controls">
-        <div id="source-buttons">
-          <button id="system-audio" class="source-btn primary">SYSTEM AUDIO</button>
-          <button id="mic" class="source-btn">MIC</button>
-        </div>
-        <p id="hint">Select Chrome tab with audio / Check "Share tab audio"</p>
-        <div id="settings" class="autohide">
-          <!-- Tab buttons -->
-          <div class="tab-buttons">
-            <button class="tab-btn active" data-tab="text">TEXT</button>
-            <button class="tab-btn" data-tab="colors">COLORS</button>
-            <button class="tab-btn" data-tab="effects">FX</button>
-            <button class="tab-btn" data-tab="visual">VISUAL</button>
-            <button class="tab-btn" data-tab="presets">PRESETS</button>
+      
+      <!-- Start screen -->
+      <div id="start-screen">
+        <div class="start-content">
+          <h1>ASOUNDING</h1>
+          <p class="tagline">Visual music experience</p>
+          <div class="start-buttons">
+            <button id="system-audio" class="start-btn primary">
+              <span class="btn-icon">🔊</span>
+              System Audio
+            </button>
+            <button id="mic" class="start-btn">
+              <span class="btn-icon">🎤</span>
+              Microphone
+            </button>
           </div>
-          
-          <!-- TEXT TAB -->
-          <div class="tab-content active" id="tab-text">
-            <div class="settings-row">
-              <input type="text" id="custom-text" value="NAKUL" maxlength="20" placeholder="Text" />
-              <select id="font-select">
-                <option value="Bebas Neue">Bebas Neue</option>
-                <option value="Montserrat">Montserrat</option>
-                <option value="Oswald">Oswald</option>
-                <option value="Rajdhani">Rajdhani</option>
-                <option value="Orbitron">Orbitron</option>
-                <option value="Press Start 2P">Pixel</option>
-                <option value="Teko">Teko</option>
-                <option value="Anton">Anton</option>
-                <option value="Black Ops One">Black Ops</option>
-                <option value="Righteous">Righteous</option>
-              </select>
-              <select id="text-anim">
-                <option value="pulse">Pulse</option>
-                <option value="bounce">Bounce</option>
-                <option value="shake">Shake</option>
-                <option value="spin">Spin</option>
-                <option value="none">Static</option>
-              </select>
-            </div>
-            <div class="settings-row">
-              <label>SIZE <input type="range" id="text-size" min="0.2" max="3" step="0.1" value="1" /></label>
-              <label>OPACITY <input type="range" id="text-opacity" min="0" max="1" step="0.05" value="0.9" /></label>
-              <label>REACT <input type="range" id="text-reactivity" min="0" max="3" step="0.1" value="1" /></label>
-              <label>GLOW <input type="range" id="text-glow" min="0" max="2" step="0.1" value="0.5" /></label>
-            </div>
-            <div class="settings-row">
-              <label>COLOR <input type="color" id="text-color" value="#ffffff" /></label>
-              <label>OUTLINE <input type="checkbox" id="text-outline" /></label>
-              <label>OUTLINE COLOR <input type="color" id="text-outline-color" value="#000000" /></label>
-            </div>
-          </div>
-          
-          <!-- COLORS TAB -->
-          <div class="tab-content" id="tab-colors">
-            <div class="settings-row">
-              <label>PRIMARY <input type="color" id="color-primary" value="#ff0000" /></label>
-              <label>SECONDARY <input type="color" id="color-secondary" value="#00ffff" /></label>
-              <label>BACKGROUND <input type="color" id="color-bg" value="#000000" /></label>
-            </div>
-            <div class="settings-row">
-              <label>SATURATION <input type="range" id="saturation" min="0" max="2" step="0.1" value="1" /></label>
-              <label>TEMPERATURE <input type="range" id="temperature" min="-1" max="1" step="0.1" value="0" /></label>
-              <label>COLOR CYCLE <input type="checkbox" id="color-cycle" /></label>
-              <label>CYCLE SPEED <input type="range" id="cycle-speed" min="0.1" max="3" step="0.1" value="1" /></label>
-            </div>
-          </div>
-          
-          <!-- EFFECTS TAB -->
-          <div class="tab-content" id="tab-effects">
-            <div class="settings-row">
-              <label>BLOOM <input type="range" id="bloom" min="0" max="5" step="0.1" value="1.5" /></label>
-              <label>GLITCH <input type="range" id="glitch" min="0" max="1" step="0.05" value="0" /></label>
-              <label>CHROMATIC <input type="range" id="chromatic" min="0" max="1" step="0.05" value="0.1" /></label>
-            </div>
-            <div class="settings-row">
-              <label>SCANLINES <input type="range" id="scanlines" min="0" max="2" step="0.1" value="0.5" /></label>
-              <label>NOISE <input type="range" id="noise" min="0" max="1" step="0.05" value="0.1" /></label>
-              <label>VIGNETTE <input type="range" id="vignette" min="0" max="1" step="0.05" value="0" /></label>
-            </div>
-            <div class="settings-row">
-              <label>SHAKE <input type="range" id="shake" min="0" max="2" step="0.1" value="1" /></label>
-              <label>BEAT FLASH <input type="checkbox" id="beat-flash" /></label>
-              <label>INVERT <input type="checkbox" id="invert" /></label>
-              <label>MOTION BLUR <input type="checkbox" id="motion-blur" /></label>
-            </div>
-          </div>
-          
-          <!-- VISUAL TAB -->
-          <div class="tab-content" id="tab-visual">
-            <div class="settings-row">
-              <label>SENSITIVITY <input type="range" id="sensitivity" min="0.5" max="5" step="0.1" value="2" /></label>
-              <label>SPEED <input type="range" id="anim-speed" min="0.2" max="3" step="0.1" value="1" /></label>
-              <label>TRAIL LENGTH <input type="range" id="trail-length" min="0" max="2" step="0.1" value="1" /></label>
-            </div>
-            <div class="settings-row">
-              <label>PARTICLES <input type="range" id="particle-density" min="0.2" max="3" step="0.1" value="1" /></label>
-              <label>ZOOM PULSE <input type="range" id="zoom-pulse" min="0" max="2" step="0.1" value="0.5" /></label>
-              <label>ROTATION <input type="range" id="scene-rotation" min="0" max="1" step="0.05" value="0" /></label>
-            </div>
-            <div class="settings-row">
-              <label>MIRROR X <input type="checkbox" id="mirror-x" /></label>
-              <label>MIRROR Y <input type="checkbox" id="mirror-y" /></label>
-            </div>
-            <div class="settings-row">
-              <label>AUTO-CYCLE <input type="checkbox" id="auto-cycle" checked /></label>
-              <label>BEATS <select id="auto-cycle-beats">
-                <option value="4">4</option>
-                <option value="8">8</option>
-                <option value="16" selected>16</option>
-                <option value="32">32</option>
-                <option value="64">64</option>
-              </select></label>
-              <label>MODE <select id="auto-cycle-mode">
-                <option value="smart">Smart</option>
-                <option value="random">Random</option>
-                <option value="sequential">Sequential</option>
-              </select></label>
-            </div>
-          </div>
-          
-          <!-- PRESETS TAB -->
-          <div class="tab-content" id="tab-presets">
-            <div class="settings-row">
-              <button class="preset-btn" data-preset="default">DEFAULT</button>
-              <button class="preset-btn" data-preset="neon">NEON</button>
-              <button class="preset-btn" data-preset="retro">RETRO</button>
-              <button class="preset-btn" data-preset="minimal">MINIMAL</button>
-              <button class="preset-btn" data-preset="chaos">CHAOS</button>
-            </div>
-            <div class="settings-row">
-              <button class="preset-btn" data-preset="chill">CHILL</button>
-              <button class="preset-btn" data-preset="rave">RAVE</button>
-              <button class="preset-btn" data-preset="vaporwave">VAPOR</button>
-              <button class="preset-btn" data-preset="matrix">MATRIX</button>
-              <button class="preset-btn" data-preset="fire">FIRE</button>
-            </div>
-            <div class="settings-row">
-              <button id="save-preset" class="action-btn">SAVE CUSTOM</button>
-              <button id="load-preset" class="action-btn">LOAD CUSTOM</button>
-            </div>
-            <div class="settings-row">
-              <button id="export-preset" class="action-btn">EXPORT JSON</button>
-              <button id="import-preset" class="action-btn">IMPORT JSON</button>
-            </div>
-            <div class="settings-row">
-              <label>TRANSITION <select id="transition-style">
-                <option value="fade">Fade</option>
-                <option value="cut">Cut</option>
-                <option value="wipe">Wipe</option>
-                <option value="zoom">Zoom</option>
-                <option value="glitch">Glitch</option>
-              </select></label>
-            </div>
-          </div>
-          
-          <div class="mode-keys">
-            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
-            <span>6</span><span>7</span><span>8</span><span>9</span><span>0</span>
-            <span>K</span><span>L</span>
-          </div>
+          <p class="start-hint">Select Chrome tab with audio / Check "Share tab audio"</p>
         </div>
       </div>
+      
+      <!-- Right panel trigger zone -->
+      <div id="panel-trigger"></div>
+      
+      <!-- Right slide-out panel -->
+      <div id="panel">
+        <div class="panel-header">
+          <div class="audio-stats">
+            <div class="stat">
+              <span class="stat-value" id="bpm-display">120</span>
+              <span class="stat-label">BPM</span>
+            </div>
+            <div class="stat">
+              <div class="beat-indicator" id="beat-indicator"></div>
+              <span class="stat-label">BEAT</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="energy-display">--</span>
+              <span class="stat-label">ENERGY</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Mode Grid -->
+        <div class="panel-section">
+          <div class="section-header">MODES</div>
+          <div class="mode-grid">
+            <button class="mode-btn active" data-mode="0" data-key="1">
+              <span class="mode-icon">〰️</span>
+              <span class="mode-name">Wave</span>
+            </button>
+            <button class="mode-btn" data-mode="1" data-key="2">
+              <span class="mode-icon">◉</span>
+              <span class="mode-name">Circular</span>
+            </button>
+            <button class="mode-btn" data-mode="2" data-key="3">
+              <span class="mode-icon">▮▮▮</span>
+              <span class="mode-name">Bars</span>
+            </button>
+            <button class="mode-btn" data-mode="3" data-key="4">
+              <span class="mode-icon">✦</span>
+              <span class="mode-name">Particles</span>
+            </button>
+            <button class="mode-btn" data-mode="4" data-key="5">
+              <span class="mode-icon">◎</span>
+              <span class="mode-name">Tunnel</span>
+            </button>
+            <button class="mode-btn" data-mode="5" data-key="6">
+              <span class="mode-icon">●</span>
+              <span class="mode-name">Sphere</span>
+            </button>
+            <button class="mode-btn" data-mode="6" data-key="7">
+              <span class="mode-icon">🌀</span>
+              <span class="mode-name">Spiral</span>
+            </button>
+            <button class="mode-btn" data-mode="7" data-key="8">
+              <span class="mode-icon">▦</span>
+              <span class="mode-name">Grid</span>
+            </button>
+            <button class="mode-btn" data-mode="8" data-key="9">
+              <span class="mode-icon">◯</span>
+              <span class="mode-name">Rings</span>
+            </button>
+            <button class="mode-btn" data-mode="9" data-key="0">
+              <span class="mode-icon">✧</span>
+              <span class="mode-name">Stars</span>
+            </button>
+            <button class="mode-btn" data-mode="10" data-key="K">
+              <span class="mode-icon">✿</span>
+              <span class="mode-name">Kaleido</span>
+            </button>
+            <button class="mode-btn" data-mode="11" data-key="L">
+              <span class="mode-icon">💧</span>
+              <span class="mode-name">Fluid</span>
+            </button>
+          </div>
+          <div class="auto-cycle-row">
+            <label class="toggle-label">
+              <input type="checkbox" id="auto-cycle" checked />
+              <span>Auto-Cycle</span>
+            </label>
+            <select id="auto-cycle-beats">
+              <option value="4">4 beats</option>
+              <option value="8">8 beats</option>
+              <option value="16" selected>16 beats</option>
+              <option value="32">32 beats</option>
+            </select>
+            <select id="auto-cycle-mode">
+              <option value="smart">Smart</option>
+              <option value="random">Random</option>
+              <option value="sequential">Seq</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Accordion Sections -->
+        <div class="accordion">
+          <!-- Audio Section -->
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>🎵 Audio</span>
+              <span class="accordion-icon">›</span>
+            </button>
+            <div class="accordion-content">
+              <div class="control-row">
+                <label>Sensitivity</label>
+                <input type="range" id="sensitivity" min="0.5" max="5" step="0.1" value="2" />
+              </div>
+              <div class="control-row">
+                <label>Bass React</label>
+                <input type="range" id="bass-react" min="0" max="3" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Mids React</label>
+                <input type="range" id="mids-react" min="0" max="3" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Highs React</label>
+                <input type="range" id="highs-react" min="0" max="3" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Beat Pulse</label>
+                <input type="checkbox" id="beat-pulse" checked />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Visual Section -->
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>👁️ Visual</span>
+              <span class="accordion-icon">›</span>
+            </button>
+            <div class="accordion-content">
+              <div class="control-row">
+                <label>Speed</label>
+                <input type="range" id="anim-speed" min="0.2" max="3" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Trail</label>
+                <input type="range" id="trail-length" min="0" max="2" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Particles</label>
+                <input type="range" id="particle-density" min="0.2" max="3" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Zoom Pulse</label>
+                <input type="range" id="zoom-pulse" min="0" max="2" step="0.1" value="0.5" />
+              </div>
+              <div class="control-row">
+                <label>Rotation</label>
+                <input type="range" id="scene-rotation" min="0" max="1" step="0.05" value="0" />
+              </div>
+              <div class="control-row">
+                <label>Mirror X</label>
+                <input type="checkbox" id="mirror-x" />
+              </div>
+              <div class="control-row">
+                <label>Mirror Y</label>
+                <input type="checkbox" id="mirror-y" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Colors Section -->
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>🎨 Colors</span>
+              <span class="accordion-icon">›</span>
+            </button>
+            <div class="accordion-content">
+              <div class="control-row">
+                <label>Primary</label>
+                <input type="color" id="color-primary" value="#ff0000" />
+              </div>
+              <div class="control-row">
+                <label>Secondary</label>
+                <input type="color" id="color-secondary" value="#00ffff" />
+              </div>
+              <div class="control-row">
+                <label>Background</label>
+                <input type="color" id="color-bg" value="#000000" />
+              </div>
+              <div class="control-row">
+                <label>Saturation</label>
+                <input type="range" id="saturation" min="0" max="2" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Temperature</label>
+                <input type="range" id="temperature" min="-1" max="1" step="0.1" value="0" />
+              </div>
+              <div class="control-row">
+                <label>Color Cycle</label>
+                <input type="checkbox" id="color-cycle" />
+              </div>
+              <div class="control-row">
+                <label>Cycle Speed</label>
+                <input type="range" id="cycle-speed" min="0.1" max="3" step="0.1" value="1" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Effects Section -->
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>✨ Effects</span>
+              <span class="accordion-icon">›</span>
+            </button>
+            <div class="accordion-content">
+              <div class="control-row">
+                <label>Bloom</label>
+                <input type="range" id="bloom" min="0" max="5" step="0.1" value="1.5" />
+              </div>
+              <div class="control-row">
+                <label>Glitch</label>
+                <input type="range" id="glitch" min="0" max="1" step="0.05" value="0" />
+              </div>
+              <div class="control-row">
+                <label>Chromatic</label>
+                <input type="range" id="chromatic" min="0" max="1" step="0.05" value="0.1" />
+              </div>
+              <div class="control-row">
+                <label>Scanlines</label>
+                <input type="range" id="scanlines" min="0" max="2" step="0.1" value="0.5" />
+              </div>
+              <div class="control-row">
+                <label>Noise</label>
+                <input type="range" id="noise" min="0" max="1" step="0.05" value="0.1" />
+              </div>
+              <div class="control-row">
+                <label>Vignette</label>
+                <input type="range" id="vignette" min="0" max="1" step="0.05" value="0" />
+              </div>
+              <div class="control-row">
+                <label>Shake</label>
+                <input type="range" id="shake" min="0" max="2" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Beat Flash</label>
+                <input type="checkbox" id="beat-flash" />
+              </div>
+              <div class="control-row">
+                <label>Invert</label>
+                <input type="checkbox" id="invert" />
+              </div>
+              <div class="control-row">
+                <label>Motion Blur</label>
+                <input type="checkbox" id="motion-blur" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Text Section -->
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>✏️ Text</span>
+              <span class="accordion-icon">›</span>
+            </button>
+            <div class="accordion-content">
+              <div class="control-row">
+                <label>Text</label>
+                <input type="text" id="custom-text" value="NAKUL" maxlength="20" />
+              </div>
+              <div class="control-row">
+                <label>Font</label>
+                <select id="font-select">
+                  <option value="Bebas Neue">Bebas Neue</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Oswald">Oswald</option>
+                  <option value="Rajdhani">Rajdhani</option>
+                  <option value="Orbitron">Orbitron</option>
+                  <option value="Press Start 2P">Pixel</option>
+                  <option value="Teko">Teko</option>
+                  <option value="Anton">Anton</option>
+                  <option value="Black Ops One">Black Ops</option>
+                  <option value="Righteous">Righteous</option>
+                </select>
+              </div>
+              <div class="control-row">
+                <label>Animation</label>
+                <select id="text-anim">
+                  <option value="pulse">Pulse</option>
+                  <option value="bounce">Bounce</option>
+                  <option value="shake">Shake</option>
+                  <option value="spin">Spin</option>
+                  <option value="none">Static</option>
+                </select>
+              </div>
+              <div class="control-row">
+                <label>Size</label>
+                <input type="range" id="text-size" min="0.2" max="3" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Opacity</label>
+                <input type="range" id="text-opacity" min="0" max="1" step="0.05" value="0.9" />
+              </div>
+              <div class="control-row">
+                <label>Reactivity</label>
+                <input type="range" id="text-reactivity" min="0" max="3" step="0.1" value="1" />
+              </div>
+              <div class="control-row">
+                <label>Glow</label>
+                <input type="range" id="text-glow" min="0" max="2" step="0.1" value="0.5" />
+              </div>
+              <div class="control-row">
+                <label>Color</label>
+                <input type="color" id="text-color" value="#ffffff" />
+              </div>
+              <div class="control-row">
+                <label>Outline</label>
+                <input type="checkbox" id="text-outline" />
+              </div>
+              <div class="control-row">
+                <label>Outline Color</label>
+                <input type="color" id="text-outline-color" value="#000000" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Presets Section -->
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span>💾 Presets</span>
+              <span class="accordion-icon">›</span>
+            </button>
+            <div class="accordion-content">
+              <div class="preset-grid">
+                <button class="preset-btn" data-preset="default">Default</button>
+                <button class="preset-btn" data-preset="neon">Neon</button>
+                <button class="preset-btn" data-preset="retro">Retro</button>
+                <button class="preset-btn" data-preset="minimal">Minimal</button>
+                <button class="preset-btn" data-preset="chaos">Chaos</button>
+                <button class="preset-btn" data-preset="chill">Chill</button>
+                <button class="preset-btn" data-preset="rave">Rave</button>
+                <button class="preset-btn" data-preset="vaporwave">Vapor</button>
+                <button class="preset-btn" data-preset="matrix">Matrix</button>
+                <button class="preset-btn" data-preset="fire">Fire</button>
+              </div>
+              <div class="preset-actions">
+                <button id="save-preset" class="action-btn">Save Custom</button>
+                <button id="load-preset" class="action-btn">Load Custom</button>
+              </div>
+              <div class="preset-actions">
+                <button id="export-preset" class="action-btn">Export</button>
+                <button id="import-preset" class="action-btn">Import</button>
+              </div>
+              <div class="control-row">
+                <label>Transition</label>
+                <select id="transition-style">
+                  <option value="fade">Fade</option>
+                  <option value="cut">Cut</option>
+                  <option value="wipe">Wipe</option>
+                  <option value="zoom">Zoom</option>
+                  <option value="glitch">Glitch</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Keyboard hints -->
+        <div class="panel-footer">
+          <span>F fullscreen</span>
+          <span>H hide</span>
+          <span>← → cycle</span>
+          <span>scroll zoom</span>
+        </div>
+      </div>
+      
     </div>
+    
     <!-- Import/Export Modal -->
     <div id="preset-modal" class="modal hidden">
       <div class="modal-content">
@@ -188,6 +417,7 @@
         </div>
       </div>
     </div>
+    
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -2,23 +2,26 @@ import { AudioAnalyzer } from './audio.js';
 import { WaveformVisualizer } from './visualizer.js';
 import { PRESETS, mergePreset } from './presets.js';
 
+// Elements
 const canvas = document.getElementById('visualizer');
-const controls = document.getElementById('controls');
-const sourceButtons = document.getElementById('source-buttons');
+const startScreen = document.getElementById('start-screen');
 const systemAudioBtn = document.getElementById('system-audio');
 const micBtn = document.getElementById('mic');
-const hint = document.getElementById('hint');
-const settings = document.getElementById('settings');
-const zoomHint = document.getElementById('zoom-hint');
+const panel = document.getElementById('panel');
+const panelTrigger = document.getElementById('panel-trigger');
 const modeDisplay = document.getElementById('mode-display');
+const bpmDisplay = document.getElementById('bpm-display');
+const beatIndicator = document.getElementById('beat-indicator');
+const energyDisplay = document.getElementById('energy-display');
 
 let audio = null;
 let visualizer = null;
 let isRunning = false;
-let hideTimeout = null;
-let controlsVisible = true;
 let currentSettings = { ...PRESETS.default };
+let panelVisible = false;
+let panelTimeout = null;
 
+// Initialize visualizer
 try {
   visualizer = new WaveformVisualizer(canvas);
   console.log('Visualizer initialized');
@@ -27,14 +30,84 @@ try {
   document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;">Init Error: ' + e.message + '</div>';
 }
 
-// Tab switching
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab)?.classList.add('active');
+// Panel show/hide
+function showPanel() {
+  panel.classList.add('visible');
+  panelVisible = true;
+  clearTimeout(panelTimeout);
+}
+
+function hidePanel() {
+  panel.classList.remove('visible');
+  panelVisible = false;
+}
+
+function scheduleHidePanel() {
+  clearTimeout(panelTimeout);
+  panelTimeout = setTimeout(hidePanel, 2000);
+}
+
+panelTrigger.addEventListener('mouseenter', showPanel);
+panel.addEventListener('mouseenter', () => {
+  showPanel();
+  clearTimeout(panelTimeout);
+});
+panel.addEventListener('mouseleave', scheduleHidePanel);
+
+// Touch support
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+});
+
+document.addEventListener('touchend', (e) => {
+  const touchEndX = e.changedTouches[0].clientX;
+  const diff = touchStartX - touchEndX;
+  if (diff < -50 && touchEndX > window.innerWidth - 100) {
+    showPanel();
+  } else if (diff > 50 && panelVisible) {
+    hidePanel();
+  }
+});
+
+// Accordion
+document.querySelectorAll('.accordion-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const item = header.parentElement;
+    const wasOpen = item.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+    // Toggle current
+    if (!wasOpen) item.classList.add('open');
   });
+});
+
+// Mode buttons
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = parseInt(btn.dataset.mode);
+    visualizer?.setMode(mode);
+    updateActiveModeBtn(mode);
+  });
+});
+
+function updateActiveModeBtn(mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.mode-btn[data-mode="${mode}"]`)?.classList.add('active');
+}
+
+// Mode change event
+window.addEventListener('modechange', (e) => {
+  updateActiveModeBtn(visualizer?.currentModeIndex || 0);
+  if (modeDisplay) {
+    modeDisplay.textContent = e.detail.name;
+    modeDisplay.classList.remove('hidden');
+    modeDisplay.classList.add('show');
+    setTimeout(() => {
+      modeDisplay.classList.remove('show');
+      setTimeout(() => modeDisplay.classList.add('hidden'), 300);
+    }, 1500);
+  }
 });
 
 // Presets
@@ -109,19 +182,14 @@ modalApply?.addEventListener('click', () => {
   }
 });
 
-modalClose?.addEventListener('click', () => {
-  modal.classList.add('hidden');
-});
-
+modalClose?.addEventListener('click', () => modal.classList.add('hidden'));
 modal?.addEventListener('click', (e) => {
   if (e.target === modal) modal.classList.add('hidden');
 });
 
 // Transition style
-let transitionStyle = 'fade';
 document.getElementById('transition-style')?.addEventListener('change', (e) => {
-  transitionStyle = e.target.value;
-  if (visualizer) visualizer.transitionStyle = transitionStyle;
+  if (visualizer) visualizer.transitionStyle = e.target.value;
 });
 
 function applySettings(s) {
@@ -166,10 +234,14 @@ function updateUIFromSettings() {
   setValue('scene-rotation', s.sceneRotation);
   setChecked('mirror-x', s.mirrorX);
   setChecked('mirror-y', s.mirrorY);
-  // Auto-cycle
   setChecked('auto-cycle', s.autoCycle);
   setValue('auto-cycle-beats', s.autoCycleBeats);
   setValue('auto-cycle-mode', s.autoCycleMode);
+  // Audio reactivity
+  setValue('bass-react', s.bassReact || 1);
+  setValue('mids-react', s.midsReact || 1);
+  setValue('highs-react', s.highsReact || 1);
+  setChecked('beat-pulse', s.beatPulse !== false);
 }
 
 function setValue(id, val) {
@@ -239,85 +311,66 @@ bindControl('mirror-y', 'mirrorY', true);
 
 // Auto-cycle
 bindControl('auto-cycle', 'autoCycle', true);
-bindControl('auto-cycle-beats', 'autoCycleBeats', false, true);  // parse as number
+bindControl('auto-cycle-beats', 'autoCycleBeats', false, true);
 bindControl('auto-cycle-mode', 'autoCycleMode', false, false);
 
-window.addEventListener('modechange', (e) => {
-  if (modeDisplay) {
-    modeDisplay.textContent = e.detail.name;
-    modeDisplay.classList.remove('hidden');
-    modeDisplay.classList.add('show');
-    setTimeout(() => {
-      modeDisplay.classList.remove('show');
-      setTimeout(() => modeDisplay.classList.add('hidden'), 300);
-    }, 1500);
-  }
-});
+// Audio reactivity
+bindControl('bass-react', 'bassReact');
+bindControl('mids-react', 'midsReact');
+bindControl('highs-react', 'highsReact');
+bindControl('beat-pulse', 'beatPulse', true);
 
-// Auto-cycle: no display, handled silently with morph effect
-
-function showControls() {
-  controls.classList.remove('hidden');
-  zoomHint?.classList.remove('hidden');
-  controlsVisible = true;
-  clearTimeout(hideTimeout);
-  if (isRunning) {
-    hideTimeout = setTimeout(() => {
-      controls.classList.add('hidden');
-      zoomHint?.classList.add('hidden');
-      controlsVisible = false;
-    }, 5000);
-  }
-}
-
-function hideSourceUI() {
-  sourceButtons.classList.add('autohide');
-  hint.classList.add('autohide');
-  settings.classList.remove('autohide');
-  showControls();
-}
-
+// Audio source handlers
 async function startWithSource(initFn) {
   try {
     audio = new AudioAnalyzer(2048);
     await initFn();
-    hideSourceUI();
+    startScreen.classList.add('hidden');
     isRunning = true;
     animate();
   } catch (error) {
     console.error('Failed:', error);
-    hint.textContent = error.message || 'Failed';
-    hint.style.color = '#ff6b6b';
+    alert(error.message || 'Failed to start audio');
   }
 }
 
 systemAudioBtn?.addEventListener('click', () => startWithSource(() => audio.initSystemAudio()));
 micBtn?.addEventListener('click', () => startWithSource(() => audio.initMicrophone()));
 
+// Animation loop
 function animate() {
   if (!isRunning || !visualizer) return;
   requestAnimationFrame(animate);
-  visualizer.update({
+  
+  const audioData = {
     waveform: audio.getWaveform(),
     frequencies: audio.getFrequencies(),
     volume: audio.getVolume(),
     bass: audio.getBass(),
     mids: audio.getMids(),
     highs: audio.getHighs()
-  });
+  };
+  
+  visualizer.update(audioData);
+  
+  // Update audio stats display
+  if (visualizer.smartAudio) {
+    const smart = visualizer.smartAudio;
+    bpmDisplay.textContent = Math.round(smart.bpm);
+    energyDisplay.textContent = smart.energyState.toUpperCase();
+    
+    if (smart.onBeat) {
+      beatIndicator.classList.add('pulse');
+      setTimeout(() => beatIndicator.classList.remove('pulse'), 100);
+    }
+  }
 }
 
-document.addEventListener('mousemove', showControls);
-document.addEventListener('touchstart', showControls);
-
-canvas?.addEventListener('dblclick', () => {
-  document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-});
-
+// Keyboard controls
 const TOTAL_MODES = 12;
 
 document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
   
   if (e.key >= '1' && e.key <= '9') { visualizer?.setMode(parseInt(e.key) - 1); return; }
   if (e.key === '0') { visualizer?.setMode(9); return; }
@@ -325,24 +378,35 @@ document.addEventListener('keydown', (e) => {
   switch (e.key.toLowerCase()) {
     case 'f': document.documentElement.requestFullscreen(); break;
     case 'escape': document.fullscreenElement && document.exitFullscreen(); break;
-    case 'h': controlsVisible ? (controls.classList.add('hidden'), zoomHint?.classList.add('hidden'), controlsVisible = false) : showControls(); break;
+    case 'h': panelVisible ? hidePanel() : showPanel(); break;
     case 'arrowright': visualizer?.setMode((visualizer.currentModeIndex + 1) % TOTAL_MODES); break;
     case 'arrowleft': visualizer?.setMode((visualizer.currentModeIndex + TOTAL_MODES - 1) % TOTAL_MODES); break;
-    case 'k': visualizer?.setMode(10); break; // Kaleidoscope
-    case 'l': visualizer?.setMode(11); break; // Fluid
+    case 'k': visualizer?.setMode(10); break;
+    case 'l': visualizer?.setMode(11); break;
   }
+});
+
+canvas?.addEventListener('dblclick', () => {
+  document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 });
 
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
+// Static render for preview
 function staticRender() {
   if (isRunning || !visualizer) return;
   requestAnimationFrame(staticRender);
-  visualizer.update({ waveform: new Uint8Array(512).fill(128), frequencies: new Uint8Array(512).fill(0), volume: 0, bass: 0, mids: 0, highs: 0 });
+  visualizer.update({
+    waveform: new Uint8Array(512).fill(128),
+    frequencies: new Uint8Array(512).fill(0),
+    volume: 0, bass: 0, mids: 0, highs: 0
+  });
 }
 
+// Initialize
 if (visualizer) {
   staticRender();
   visualizer.setMode(0);
   applySettings(currentSettings);
+  updateUIFromSettings();
 }
