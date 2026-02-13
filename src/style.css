@@ -460,10 +460,10 @@ html, body {
 }
 
 /* Section reset buttons */
-.header-actions {
+.section-content-header {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: flex-end;
+  margin-bottom: 8px;
 }
 
 .section-reset-btn {
