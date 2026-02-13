@@ -118,9 +118,9 @@ export class TextOverlay {
     const isOverText = (mousePos) => {
       const textX = this.position.x;
       const textY = this.position.y;
-      const scale = Math.max(0.5, this.currentScale * (this.settings.size || 1));
-      const halfW = scale * 0.6;  // Larger hit area
-      const halfH = scale * 0.25;  // Larger hit area
+      // Use generous fixed hit area - don't scale down with text size
+      const halfW = 0.5;  // Fixed wide hit area
+      const halfH = 0.25; // Fixed tall hit area
       return Math.abs(mousePos.x - textX) < halfW && Math.abs(mousePos.y - textY) < halfH;
     };
     
